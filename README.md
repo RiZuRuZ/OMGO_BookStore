@@ -1,2 +1,2 @@
 # OMGO_BookStore
-hi hi hi hi hi
+CPE100 Project
