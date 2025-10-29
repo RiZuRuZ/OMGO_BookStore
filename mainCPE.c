@@ -1,0 +1,141 @@
+#include <stdio.h>
+#include <string.h>
+#include <windows.h>
+
+typedef struct {
+    char ID[10];
+    char name[50];
+    int age;
+    int gender; // 0: Female, 1: Male
+    char email[50];
+    char phone[20];
+    float money;
+    char rentBook[200];
+    char rentDate[20];
+    char returnDate[20];
+    char history[1000];
+} customer;
+
+typedef struct {
+    char ID[10];
+    char title[50];
+    char author[50];
+    char type[20];
+    char genre[20];
+    float price;
+    int stock;
+    float rentPrice;
+    int rentStock;
+} libraryowner;
+
+typedef struct {
+    char *arr[10];
+    int count;
+} split;
+
+int splitString(char *str, char *arr[]) {
+    int count = 0;
+    char *token = strtok(str, "&");
+    while (token != NULL) {
+        arr[count++] = token;
+        token = strtok(NULL, "&");
+    }
+    return count;
+}
+
+char* search_bookname_by_id(libraryowner library[50], char book_id[10]) {
+    for (int i = 0; i < 50; i++) {
+        if (library[i].ID[0] == '\0') break; // ไม่มีข้อมูลแล้ว
+        if (strcmp(library[i].ID, book_id) == 0) {
+            return library[i].title;
+        }
+    }
+    return NULL; // ไม่พบหนังสือ
+}
+
+
+int main() {
+    SetConsoleOutputCP(65001); // ให้ console แสดง UTF-8
+    SetConsoleCP(65001);       // ให้ scanf / fgets อ่าน UTF-8 ได้
+    FILE *user;
+    user = fopen("userCPE.txt", "r");
+    if (user == NULL) {
+        printf("ไม่พบไฟล์ข้อมูล!\n");
+        return 1;
+    }
+
+    FILE *owner;
+    owner = fopen("ownerCPE.txt", "r");
+    if (owner == NULL) {
+        printf("ไม่พบไฟล์ข้อมูล!\n");
+        return 1;
+    }
+
+    customer Customers[50];
+    libraryowner library[50];
+    split splitrent[50];
+    split splithistory[50];
+    int i = 0, j = 0;
+    
+    // อ่านข้อมูลจากไฟล์(OWNER) ***ห้ามยุ่ง***
+    while(fscanf(owner, "%s %s %s %s %s %f %d %f %d", 
+        library[i].ID, 
+        library[i].title, 
+        library[i].author, 
+        library[i].type,
+        library[i].genre,
+        &library[i].price,  
+        &library[i].stock,
+        &library[i].rentPrice,
+        &library[i].rentStock) != EOF){
+        printf("BOOK %s: %s, author %s, type %s, genre %s, price %.2f, stock %d, rentPrice %.2f, rentStock %d\n",
+            library[i].ID, library[i].title, library[i].author, library[i].type,
+            library[i].genre, library[i].price, library[i].stock,
+            library[i].rentPrice, library[i].rentStock);
+
+        i++;
+    }
+    // clear ตัวแปรนับ
+    i = 0; j = 0;
+
+    // อ่านข้อมูลจากไฟล์(USER) ***ห้ามยุ่ง***
+    while(fscanf(user, "%s %s %d %d %s %s %f %s %s %s %s", 
+        Customers[i].ID, 
+        Customers[i].name, 
+        &Customers[i].age, 
+        &Customers[i].gender, 
+        Customers[i].email, 
+        Customers[i].phone, 
+        &Customers[i].money, 
+        Customers[i].rentBook, 
+        Customers[i].rentDate, 
+        Customers[i].returnDate, 
+        Customers[i].history) != EOF){
+
+        printf("Customer %s: %s, age %d, gender %d, email %s, phone %s, money %.2f\nRentBook: %s\nRentDate: %s, ReturnDate: %s\nHistory: %s\n",
+            Customers[i].ID, Customers[i].name, Customers[i].age, Customers[i].gender,
+            Customers[i].email, Customers[i].phone, Customers[i].money,
+            Customers[i].rentBook, Customers[i].rentDate, Customers[i].returnDate, Customers[i].history);
+
+
+        // เรียกใช้ฟังก์ชัน
+        splitrent[i].count = splitString(Customers[i].rentBook, splitrent[i].arr);
+        splithistory[i].count = splitString(Customers[i].history, splithistory[i].arr);
+
+        // แสดงผลลัพธ์
+        for (j = 0; j < splitrent[i].count; j++) {
+            printf("RentBook[%d] = %s = %s\n", j, splitrent[i].arr[j], search_bookname_by_id(library, splitrent[i].arr[j]));
+        }
+        for (j = 0; j < splithistory[i].count; j++) {
+            printf("History[%d] = %s = %s\n", j, splithistory[i].arr[j], search_bookname_by_id(library, splithistory[i].arr[j]));
+        }
+        printf("\n");
+        i++;
+    }
+
+    i = 0; j = 0;
+
+    fclose(user);
+    fclose(owner);
+    return 0;
+}
