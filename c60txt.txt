@@ -1,5 +1,0 @@
-C001 Afore 34 1 somchai.j@domain.com,081-234-5678 20 "พื้นฐานโปรแกรมมิ่งด้วยภาษา C, อิเล็กทรอนิกส์เบื้องต้น"
-C002 Pornn 28 0 suphaporn.s@domain.com,089-876-5432 100 "Python ฉบับเริ่มต้น, การออกแบบเว็บด้วย HTML & CSS"
-C003 Avga 41 1 pongpol.w@domain.com,086-555-1212 40 "โครงสร้างข้อมูลและอัลกอริทึม, ระบบปฏิบัติการคอมพิวเตอร์"
-C004 Affalk 22 0 natcha.m@domain.com,092-333-4444 15 "Java ขั้นพื้นฐาน"
-C005 Somyot 30 1 thanapat.k@domain.com,085-777-8888 30 "Machine Learning พื้นฐาน, ปัญญาประดิษฐ์สำหรับผู้เริ่มต้น"
