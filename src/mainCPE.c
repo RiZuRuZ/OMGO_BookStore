@@ -55,7 +55,6 @@ char* search_bookname_by_id(libraryowner library[50], char book_id[10]) {
 
 
 int main() {
-    printf("test mainCPE.c\n");
     SetConsoleOutputCP(65001); // ให้ console แสดง UTF-8
     SetConsoleCP(65001);       // ให้ scanf / fgets อ่าน UTF-8 ได้
     FILE *user;
