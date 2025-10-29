@@ -39,7 +39,7 @@ int main() {
     SetConsoleOutputCP(65001); // ให้ console แสดง UTF-8
     SetConsoleCP(65001);       // ให้ scanf / fgets อ่าน UTF-8 ได้
     FILE *df1;
-    df1 = fopen("c60txt1.txt", "r");
+    df1 = fopen("main.txt", "r");
     if (df1 == NULL) {
         printf("ไม่พบไฟล์ข้อมูล!\n");
         return 1;
