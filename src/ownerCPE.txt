@@ -10,4 +10,4 @@ B009 Basic_Java Arunee_Phichitchai Textbook Programming 340 25 9 1
 B010 Mobile_Application_Development Weerasak_Anurak General_Book Mobile_Development 420 30 10 2
 B011 Cybersecurity_101 Thanakrit_Jitphattana General_Book Security 500 35 12 1
 B012 Programming_with_C++ Wasin_Phongphattana Textbook Programming 380 25 11 1
-B013 Basic_Machine_Learning Rattanawadee_Kiatchai General_Book Artificial_Intelligence 480 30 10
+B013 Basic_Machine_Learning Rattanawadee_Kiatchai General_Book Artificial_Intelligence 480 30 10 1

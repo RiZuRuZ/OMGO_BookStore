@@ -53,8 +53,46 @@ char* search_bookname_by_id(libraryowner library[50], char book_id[10]) {
     return NULL; // ไม่พบหนังสือ
 }
 
+char* search_user_by_id(customer Customers[50], char customer_id[10]) {
+    for (int i = 0; i < 50; i++) {
+        if (Customers[i].ID[0] == '\0') break; // ไม่มีข้อมูลแล้ว
+        if (strcmp(Customers[i].ID, customer_id) == 0) {
+            return Customers[i].name;
+        }
+    }
+    return NULL; // ไม่พบuser
+}
+
+void show_book(libraryowner library[50], int k){ //k is range
+    for(int i = 0; i < k; i++){
+        printf("BOOK %s: %s, author %s, type %s, genre %s, price %.2f, stock %d, rentPrice %.2f, rentStock %d\n",
+                library[i].ID, library[i].title, library[i].author, library[i].type,
+                library[i].genre, library[i].price, library[i].stock,
+                library[i].rentPrice, library[i].rentStock);
+    }
+}
+
+void show_customers(customer Customers[50], int k, split splitrent[50], split splithistory[50], libraryowner library[50]){ //k is range
+    int i,j;
+    for(i = 0; i < k; i++){
+        printf("Customer %s: %s, age %d, gender %d, email %s, phone %s, money %.2f\nRentBook: %s\nRentDate: %s, ReturnDate: %s\nHistory: %s\n",
+            Customers[i].ID, Customers[i].name, Customers[i].age, Customers[i].gender,
+            Customers[i].email, Customers[i].phone, Customers[i].money,
+            Customers[i].rentBook, Customers[i].rentDate, Customers[i].returnDate, Customers[i].history);
+
+        // แสดงผลลัพธ์
+        for (j = 0; j < splitrent[i].count; j++) {
+            printf("RentBook[%d] = %s = %s\n", j, splitrent[i].arr[j], search_bookname_by_id(library, splitrent[i].arr[j]));
+        }
+        for (j = 0; j < splithistory[i].count; j++) {
+            printf("History[%d] = %s = %s\n", j, splithistory[i].arr[j], search_bookname_by_id(library, splithistory[i].arr[j]));
+        }
+        printf("\n");
+    }
+}
 
 int main() {
+    int range_library, range_customers;
     SetConsoleOutputCP(65001); // ให้ console แสดง UTF-8
     SetConsoleCP(65001);       // ให้ scanf / fgets อ่าน UTF-8 ได้
     FILE *user;
@@ -75,7 +113,7 @@ int main() {
     libraryowner library[50];
     split splitrent[50];
     split splithistory[50];
-    int i = 0, j = 0;
+    int i = 0;
     
     // อ่านข้อมูลจากไฟล์(OWNER) ***ห้ามยุ่ง***
     while(fscanf(owner, "%s %s %s %s %s %f %d %f %d", 
@@ -88,15 +126,11 @@ int main() {
         &library[i].stock,
         &library[i].rentPrice,
         &library[i].rentStock) != EOF){
-        printf("BOOK %s: %s, author %s, type %s, genre %s, price %.2f, stock %d, rentPrice %.2f, rentStock %d\n",
-            library[i].ID, library[i].title, library[i].author, library[i].type,
-            library[i].genre, library[i].price, library[i].stock,
-            library[i].rentPrice, library[i].rentStock);
-
         i++;
+        range_library = i; //max range of ownertxt
     }
     // clear ตัวแปรนับ
-    i = 0; j = 0;
+    i = 0;
 
     // อ่านข้อมูลจากไฟล์(USER) ***ห้ามยุ่ง***
     while(fscanf(user, "%s %s %d %d %s %s %f %s %s %s %s", 
@@ -112,28 +146,24 @@ int main() {
         Customers[i].returnDate, 
         Customers[i].history) != EOF){
 
-        printf("Customer %s: %s, age %d, gender %d, email %s, phone %s, money %.2f\nRentBook: %s\nRentDate: %s, ReturnDate: %s\nHistory: %s\n",
-            Customers[i].ID, Customers[i].name, Customers[i].age, Customers[i].gender,
-            Customers[i].email, Customers[i].phone, Customers[i].money,
-            Customers[i].rentBook, Customers[i].rentDate, Customers[i].returnDate, Customers[i].history);
-
-
         // เรียกใช้ฟังก์ชัน
-        splitrent[i].count = splitString(Customers[i].rentBook, splitrent[i].arr);
-        splithistory[i].count = splitString(Customers[i].history, splithistory[i].arr);
+        char tempRentBook[200];
+        char tempHistory[1000];
+        
+        strcpy(tempRentBook, Customers[i].rentBook);
+        splitrent[i].count = splitString(tempRentBook, splitrent[i].arr);
 
-        // แสดงผลลัพธ์
-        for (j = 0; j < splitrent[i].count; j++) {
-            printf("RentBook[%d] = %s = %s\n", j, splitrent[i].arr[j], search_bookname_by_id(library, splitrent[i].arr[j]));
-        }
-        for (j = 0; j < splithistory[i].count; j++) {
-            printf("History[%d] = %s = %s\n", j, splithistory[i].arr[j], search_bookname_by_id(library, splithistory[i].arr[j]));
-        }
-        printf("\n");
+        strcpy(tempHistory, Customers[i].history);
+        splithistory[i].count = splitString(tempHistory, splithistory[i].arr);
+
+        //splitrent[i].count = splitString(Customers[i].rentBook, splitrent[i].arr);         #old this has bug it changed string of Customers[i].rentBook after split
+        //splithistory[i].count = splitString(Customers[i].history, splithistory[i].arr);    #so make temp to keep it
+
         i++;
+        range_customers = i;
     }
 
-    i = 0; j = 0;
+    i = 0;
 
     ///////////////////////main///////////////////////
     //login owner user 
@@ -169,8 +199,8 @@ int main() {
 
         if (login == 0) {
             switch (selection) {
-                case 1: printf("Show book\n"); break;
-                case 2: printf("Show customer\n"); break;
+                case 1: printf("Show book\n"); show_book(library,range_library); break;
+                case 2: printf("Show customer\n"); show_customers(Customers, range_customers, splitrent, splithistory, library); break;
                 case 3: printf("System rent\n"); break;
                 case 4: printf("Change\n"); break;
                 case 5: printf("Income\n"); break;
@@ -181,7 +211,7 @@ int main() {
             switch (selection) {
                 case 1: printf("History rent\n"); break;
                 case 2: printf("Money\n"); break;
-                case 3: printf("Show book\n"); break;
+                case 3: printf("Show book\n"); show_book(library,range_library); break;
                 case 4: printf("Rent\n"); break;
                 case 0: printf("Exit user mode.\n"); break;
                 default: printf("Invalid option! Please enter 0–4.\n");
@@ -189,6 +219,7 @@ int main() {
         }
     }
 
+    printf("END of program");
     fclose(user);
     fclose(owner);
     return 0;
