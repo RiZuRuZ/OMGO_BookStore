@@ -93,6 +93,9 @@ void show_customers(customer Customers[50], int k, split splitrent[50], split sp
 
 int main() {
     int range_library, range_customers;
+    char tempRentBook[200];
+    char tempHistory[1000];
+    
     SetConsoleOutputCP(65001); // ให้ console แสดง UTF-8
     SetConsoleCP(65001);       // ให้ scanf / fgets อ่าน UTF-8 ได้
     FILE *user;
@@ -147,8 +150,6 @@ int main() {
         Customers[i].history) != EOF){
 
         // เรียกใช้ฟังก์ชัน
-        char tempRentBook[200];
-        char tempHistory[1000];
         
         strcpy(tempRentBook, Customers[i].rentBook);
         splitrent[i].count = splitString(tempRentBook, splitrent[i].arr);
