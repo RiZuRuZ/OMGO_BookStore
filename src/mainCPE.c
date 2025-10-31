@@ -55,7 +55,6 @@ char* search_bookname_by_id(libraryowner library[50], char book_id[10]) {
 
 
 int main() {
-    printf("yaimakmak");
     SetConsoleOutputCP(65001); // ให้ console แสดง UTF-8
     SetConsoleCP(65001);       // ให้ scanf / fgets อ่าน UTF-8 ได้
     FILE *user;
@@ -135,6 +134,60 @@ int main() {
     }
 
     i = 0; j = 0;
+
+    ///////////////////////main///////////////////////
+    //login owner user 
+    int login = -1;
+    printf("Login as (0 = owner, 1 = user): ");
+    scanf("%d", &login);
+
+    //login
+
+
+    //selection
+    int selection = -1;
+    while (selection != 0) {
+        if (login == 0) {  // Owner menu
+            printf("\n--- Owner Menu ---\n");
+            printf("1. Show book\n");
+            printf("2. Show customer\n");
+            printf("3. System rent\n");
+            printf("4. Change\n");
+            printf("5. Income\n");
+            printf("0. Exit\n");
+        } else {  // User menu
+            printf("\n--- User Menu ---\n");
+            printf("1. History rent\n");
+            printf("2. Money\n");
+            printf("3. Show book\n");
+            printf("4. Rent\n");
+            printf("0. Exit\n");
+        }
+
+        printf("Selection: ");
+        scanf("%d", &selection);
+
+        if (login == 0) {
+            switch (selection) {
+                case 1: printf("Show book\n"); break;
+                case 2: printf("Show customer\n"); break;
+                case 3: printf("System rent\n"); break;
+                case 4: printf("Change\n"); break;
+                case 5: printf("Income\n"); break;
+                case 0: printf("Exit owner mode.\n"); break;
+                default: printf("Invalid option! Please enter 0–5.\n");
+            }
+        } else {
+            switch (selection) {
+                case 1: printf("History rent\n"); break;
+                case 2: printf("Money\n"); break;
+                case 3: printf("Show book\n"); break;
+                case 4: printf("Rent\n"); break;
+                case 0: printf("Exit user mode.\n"); break;
+                default: printf("Invalid option! Please enter 0–4.\n");
+            }
+        }
+    }
 
     fclose(user);
     fclose(owner);
