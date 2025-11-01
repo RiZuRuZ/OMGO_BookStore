@@ -29,15 +29,16 @@ typedef struct {
 } libraryowner;
 
 typedef struct {
-    char *arr[10];
+    char arr[10][50];
     int count;
 } split;
 
-int splitString(char *str, char *arr[]) {
+
+int splitString(char *str, char arr[10][50]) {
     int count = 0;
     char *token = strtok(str, "&");
-    while (token != NULL) {
-        arr[count++] = token;
+    while (token != NULL && count < 10) {
+        strcpy(arr[count++], token);
         token = strtok(NULL, "&");
     }
     return count;
@@ -53,6 +54,7 @@ char* search_bookname_by_id(libraryowner library[50], char book_id[10]) {
     return NULL; // ไม่พบหนังสือ
 }
 
+//ยังไม่ได้ลองอาจจะ bug
 char* search_user_by_id(customer Customers[50], char customer_id[10]) {
     for (int i = 0; i < 50; i++) {
         if (Customers[i].ID[0] == '\0') break; // ไม่มีข้อมูลแล้ว
@@ -90,81 +92,73 @@ void show_customers(customer Customers[50], int k, split splitrent[50], split sp
         printf("\n");
     }
 }
-
-int main() {
-    int range_library, range_customers;
-    char tempRentBook[200];
-    char tempHistory[1000];
-    
-    SetConsoleOutputCP(65001); // ให้ console แสดง UTF-8
-    SetConsoleCP(65001);       // ให้ scanf / fgets อ่าน UTF-8 ได้
-    FILE *user;
-    user = fopen("userCPE.txt", "r");
-    if (user == NULL) {
-        printf("ไม่พบไฟล์ข้อมูล!\n");
-        return 1;
-    }
-
-    FILE *owner;
-    owner = fopen("ownerCPE.txt", "r");
-    if (owner == NULL) {
-        printf("ไม่พบไฟล์ข้อมูล!\n");
-        return 1;
-    }
-
-    customer Customers[50];
-    libraryowner library[50];
-    split splitrent[50];
-    split splithistory[50];
+// อ่านข้อมูลจากไฟล์(OWNER) ***ห้ามยุ่ง***
+int read_library_file(FILE *owner, libraryowner library[]) {
     int i = 0;
-    
-    // อ่านข้อมูลจากไฟล์(OWNER) ***ห้ามยุ่ง***
-    while(fscanf(owner, "%s %s %s %s %s %f %d %f %d", 
-        library[i].ID, 
-        library[i].title, 
-        library[i].author, 
+    while (fscanf(owner, "%s %s %s %s %s %f %d %f %d",
+        library[i].ID,
+        library[i].title,
+        library[i].author,
         library[i].type,
         library[i].genre,
-        &library[i].price,  
+        &library[i].price,
         &library[i].stock,
         &library[i].rentPrice,
-        &library[i].rentStock) != EOF){
+        &library[i].rentStock) != EOF) {
         i++;
-        range_library = i; //max range of ownertxt
     }
-    // clear ตัวแปรนับ
-    i = 0;
+    return i; // คืนค่าจำนวนหนังสือที่อ่านได้
+}
 
-    // อ่านข้อมูลจากไฟล์(USER) ***ห้ามยุ่ง***
-    while(fscanf(user, "%s %s %d %d %s %s %f %s %s %s %s", 
-        Customers[i].ID, 
-        Customers[i].name, 
-        &Customers[i].age, 
-        &Customers[i].gender, 
-        Customers[i].email, 
-        Customers[i].phone, 
-        &Customers[i].money, 
-        Customers[i].rentBook, 
-        Customers[i].rentDate, 
-        Customers[i].returnDate, 
-        Customers[i].history) != EOF){
+// อ่านข้อมูลจากไฟล์(USER) ***ห้ามยุ่ง***
+int read_customer_file(FILE *user, customer Customers[], split splitrent[], split splithistory[]) {
+    int i = 0;
+    char tempRentBook[200];
+    char tempHistory[1000];
 
-        // เรียกใช้ฟังก์ชัน
-        
+    while (fscanf(user, "%s %s %d %d %s %s %f %s %s %s %s",
+        Customers[i].ID,
+        Customers[i].name,
+        &Customers[i].age,
+        &Customers[i].gender,
+        Customers[i].email,
+        Customers[i].phone,
+        &Customers[i].money,
+        Customers[i].rentBook,
+        Customers[i].rentDate,
+        Customers[i].returnDate,
+        Customers[i].history) != EOF) {
+
+        // แยก string ด้วย comma
         strcpy(tempRentBook, Customers[i].rentBook);
         splitrent[i].count = splitString(tempRentBook, splitrent[i].arr);
 
         strcpy(tempHistory, Customers[i].history);
         splithistory[i].count = splitString(tempHistory, splithistory[i].arr);
 
-        //splitrent[i].count = splitString(Customers[i].rentBook, splitrent[i].arr);         #old this has bug it changed string of Customers[i].rentBook after split
-        //splithistory[i].count = splitString(Customers[i].history, splithistory[i].arr);    #so make temp to keep it
-
         i++;
-        range_customers = i;
+    }
+    return i; // คืนค่าจำนวนลูกค้าที่อ่านได้
+}
+
+int main() {
+    FILE *owner = fopen("ownerCPE.txt", "r");
+    FILE *user = fopen("userCPE.txt", "r");
+    if (!owner || !user) {
+        printf("Error opening file!\n");
+        return 1;
     }
 
-    i = 0;
+    libraryowner library[50];
+    customer Customers[50];
+    split splitrent[50], splithistory[50];
+
+    //เรียกใช้ฟังก์ชันอ่านไฟล์
+    int range_library = read_library_file(owner, library);
+    int range_customers = read_customer_file(user, Customers, splitrent, splithistory);
+
+    //printf("Read %d books and %d customers successfully.\n", range_library, range_customers);
+
 
     ///////////////////////main///////////////////////
     //login owner user 
@@ -173,8 +167,6 @@ int main() {
     scanf("%d", &login);
 
     //login
-
-
     //selection
     int selection = -1;
     while (selection != 0) {
@@ -203,7 +195,18 @@ int main() {
                 case 1: printf("Show book\n"); show_book(library,range_library); break;
                 case 2: printf("Show customer\n"); show_customers(Customers, range_customers, splitrent, splithistory, library); break;
                 case 3: printf("System rent\n"); break;
-                case 4: printf("Change\n"); break;
+                case 4:
+                    printf("Change Mode:\n");
+                    printf("1. Add Book\n");
+                    printf("2. Remove Book\n");
+                    printf("3. Edit Book\n");
+                    int sub;
+                    scanf("%d", &sub);
+                    if(sub == 1) { /* Add book function */ }
+                    else if(sub == 2) { /* Remove book function */ }
+                    else if(sub == 3) { /* Edit book function */ }
+                    else printf("Invalid option.\n");
+                    break;
                 case 5: printf("Income\n"); break;
                 case 0: printf("Exit owner mode.\n"); break;
                 default: printf("Invalid option! Please enter 0–5.\n");
