@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "d:/#KMUTT STUDY/OMGO_BookStore/OMGO_BookStore/Ideal",
-      "program": "d:/#KMUTT STUDY/OMGO_BookStore/OMGO_BookStore/Ideal/build/Debug/outDebug",
+      "cwd": "d:/#KMUTT STUDY/OMGO_BookStore/OMGO_BookStore/src",
+      "program": "d:/#KMUTT STUDY/OMGO_BookStore/OMGO_BookStore/src/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

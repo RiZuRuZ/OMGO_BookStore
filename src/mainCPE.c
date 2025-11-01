@@ -33,7 +33,95 @@ typedef struct {
     int count;
 } split;
 
+int userSignUp(customer Customers[], int range_customers) {
+    if (range_customers >= 50) {
+        printf("User database is full!\n");
+        return range_customers;
+    }
 
+    customer newUser;
+
+    // สร้าง ID อัตโนมัติ
+    sprintf(newUser.ID, "C%03d", range_customers + 1);
+    printf("Your user ID: %s\n", newUser.ID);
+
+    printf("Enter name: ");
+    scanf(" %49[^\n]", newUser.name);
+
+    printf("Enter age: ");
+    scanf("%d", &newUser.age);
+
+    printf("Enter gender (0=Female, 1=Male): ");
+    scanf("%d", &newUser.gender);
+
+    printf("Enter email: ");
+    scanf("%s", newUser.email);
+
+    printf("Enter phone: ");
+    scanf("%s", newUser.phone);
+
+    newUser.money = 0.0f;
+    strcpy(newUser.rentBook, "");
+    strcpy(newUser.rentDate, "");
+    strcpy(newUser.returnDate, "");
+    strcpy(newUser.history, "");
+
+    // เพิ่ม user ลง array
+    Customers[range_customers] = newUser;
+    range_customers++;
+
+    // บันทึกลงไฟล์
+    FILE *file = fopen("userCPE.txt", "a");
+    if (file) {
+        fprintf(file, "%s %s %d %d %s %s %.2f %s %s %s %s\n",
+            newUser.ID, newUser.name, newUser.age, newUser.gender,
+            newUser.email, newUser.phone, newUser.money,
+            newUser.rentBook, newUser.rentDate, newUser.returnDate, newUser.history
+        );
+        fclose(file);
+    } else {
+        printf("Error opening user file!\n");
+    }
+
+    printf("✅ User account created successfully!\n");
+    return range_customers;
+}
+
+int userLogin(customer Customers[50], int k){//Jay
+    char userID[30],userPass[30];
+    printf("------------------------------------------------\n");
+    for(int i=0; i<3; i++){
+        printf("Enter your ID: ");
+        scanf("%s",userID);
+        printf("Enter your password: ");
+        scanf("%s",userPass);
+        printf("------------------------------------------------\n");
+        for(int j=0; j<k; j++){
+            if (strcmp(userID, Customers[j].ID) == 0 && strcmp(userPass,"1234") == 0) {
+                return 1;
+            } 
+        }
+    }
+    return 0;
+}
+
+int ownerLogin(){ //Jay
+    char ownerName[30],ownerPass[30];
+    printf("------------------------------------------------\n");
+    for(int i=0; i<3; i++){
+        printf("Enter your name: ");
+        scanf("%s",ownerName);
+        printf("Enter your password: ");
+        scanf("%s",ownerPass);
+        printf("------------------------------------------------\n");
+        if (strcmp(ownerName, "OMGO") == 0 && strcmp(ownerPass, "BookStore") == 0) {
+            return 1;
+        } 
+    }
+    return 0;
+}
+
+//====================================================================================//
 int splitString(char *str, char arr[10][50]) {
     int count = 0;
     char *token = strtok(str, "&");
@@ -115,7 +203,34 @@ void save_library_to_file(libraryowner library[], int range_library) {
     }
     fclose(file);
 }
+/*
+void save_customer_to_file(customer Customers[], int range_customers) {
+    FILE *file = fopen("user.txt", "w");
+    if (!file) {
+        printf("Error saving customer file!\n");
+        return;
+    }
 
+    for (int i = 0; i < range_customers; i++) {
+        fprintf(file, "%s %s %d %d %s %s %.2f %s %s %s %s\n",
+            Customers[i].ID,
+            Customers[i].name,
+            Customers[i].age,
+            Customers[i].gender,
+            Customers[i].email,
+            Customers[i].phone,
+            Customers[i].money,
+            Customers[i].rentBook,
+            Customers[i].rentDate,
+            Customers[i].returnDate,
+            Customers[i].history
+        );
+    }
+
+    fclose(file);
+    printf("✅ Customer data saved successfully!\n");
+}
+*/
 int add_book(libraryowner library[], int range_library) {
     if (range_library >= 50) {
         printf("Library is full!\n");
@@ -338,69 +453,116 @@ int main() {
 
     ///////////////////////main///////////////////////
     //login owner user 
-    int login = -1;
-    printf("Login as (0 = owner, 1 = user): ");
-    scanf("%d", &login);
+    
 
-    //login
-    //selection
-    int selection = -1;
-    while (selection != 0) {
-        if (login == 0) {  // Owner menu
-            printf("\n--- Owner Menu ---\n");
-            printf("1. Show book\n");
-            printf("2. Show customer\n");
-            printf("3. System rent\n");
-            printf("4. Change\n");
-            printf("5. Income\n");
-            printf("0. Exit\n");
-        } else {  // User menu
-            printf("\n--- User Menu ---\n");
-            printf("1. History rent\n");
-            printf("2. Money\n");
-            printf("3. Show book\n");
-            printf("4. Rent\n");
-            printf("0. Exit\n");
-        }
-
-        printf("Selection: ");
-        scanf("%d", &selection);
-
-        if (login == 0) {
-            switch (selection) {
-                case 1: printf("Show book\n"); show_book(library,range_library); break;
-                case 2: printf("Show customer\n"); show_customers(Customers, range_customers, splitrent, splithistory, library); break;
-                case 3: printf("System rent\n"); break;
-                case 4:
-                    printf("Change Mode:\n");
-                    printf("1. Add Book\n");
-                    printf("2. Remove Book\n");
-                    printf("3. Edit Book\n");
-                    int sub;
-                    scanf("%d", &sub);
-                    if (sub == 1) range_library = add_book(library, range_library);
-                    else if (sub == 2) range_library = remove_book(library, range_library);
-                    else if (sub == 3) edit_book(library, range_library);
-                    else printf("Invalid option.\n");
-                    break;
-                case 5: printf("Income\n"); break;
-                case 0: printf("Exit owner mode.\n"); break;
-                default: printf("Invalid option! Please enter 0–5.\n");
-            }
-        } else {
-            switch (selection) {
-                case 1: printf("History rent\n"); break;
-                case 2: printf("Money\n"); break;
-                case 3: printf("Show book\n"); show_book(library,range_library); break;
-                case 4: printf("Rent\n"); break;
-                case 0: printf("Exit user mode.\n"); break;
-                default: printf("Invalid option! Please enter 0–4.\n");
+    //login Jay
+    int login_state; // 0 not pass, 1 pass
+    while (1){
+        int login = -1;
+        printf("Login as (0 = owner, 1 = user): ");
+        scanf("%d", &login);
+        
+        if (login == 0){
+            login_state = ownerLogin();
+            if (login_state == 0){
+                    printf("ID or password is incorrect. Please enter again.\n");
+                    printf("------------------------------------------------\n");
+                    continue;
             }
         }
+        else if (login == 1){
+            int pick;
+            printf("1. Sign up\n");
+            printf("2. Sign in\n");
+            printf("Selection: ");
+            scanf("%d", &pick);
+
+            if (pick == 1){
+                range_customers = userSignUp(Customers, range_customers);
+                continue;
+            }
+            else if (pick == 2){
+                login_state = userLogin(Customers, range_customers);
+                if (login_state == 0){
+                    printf("ID or password is incorrect. Please enter again.\n");
+                    printf("------------------------------------------------\n");
+                    continue;
+                }
+            }
+            else {
+                printf("Wrong option entered. Please enter again.\n");
+                printf("------------------------------------------------\n");
+                continue;
+            }
+        }
+        else{
+            printf("Wrong option entered. Please enter again.\n");
+            printf("------------------------------------------------\n");
+            continue;
+        }
+        //selection
+        int selection = -1;
+        while (selection != 0 && login_state == 1) {
+            if (login == 0) {  // Owner menu
+                printf("------------------ Owner Menu ------------------\n");
+                printf("1. Show book\n");
+                printf("2. Show customer\n");
+                printf("3. System rent\n");
+                printf("4. Change\n");
+                printf("5. Income\n");
+                printf("0. Exit\n");
+                printf("------------------------------------------------\n");
+            } else {  // User menu
+                printf("\n--- User Menu ---\n");
+                printf("1. History rent\n");
+                printf("2. Money\n");
+                printf("3. Show book\n");
+                printf("4. Rent\n");
+                printf("0. Exit\n");
+                printf("------------------------------------------------\n");
+            }
+
+            printf("Selection: ");
+            scanf("%d", &selection);
+            printf("------------------------------------------------\n");
+
+            if (login == 0) {
+                switch (selection) {
+                    case 1: printf("Show book\n"); show_book(library,range_library); break;
+                    case 2: printf("Show customer\n"); show_customers(Customers, range_customers, splitrent, splithistory, library); break;
+                    case 3: printf("System rent\n"); break;
+                    case 4:
+                        printf("Change Mode:\n");
+                        printf("1. Add Book\n");
+                        printf("2. Remove Book\n");
+                        printf("3. Edit Book\n");
+                        int sub;
+                        scanf("%d", &sub);
+                        if (sub == 1) range_library = add_book(library, range_library);
+                        else if (sub == 2) range_library = remove_book(library, range_library);
+                        else if (sub == 3) edit_book(library, range_library);
+                        else printf("Invalid option.\n");
+                        break;
+                    case 5: printf("Income\n"); break;
+                    case 0: printf("Exit owner mode.\n"); break;
+                    default: printf("Invalid option! Please enter 0–5.\n");
+                }
+            } else {
+                switch (selection) {
+                    case 1: printf("History rent\n"); break;
+                    case 2: printf("Money\n"); break;
+                    case 3: printf("Show book\n"); show_book(library,range_library); break;
+                    case 4: printf("Rent\n"); break;
+                    case 0: printf("Exit user mode.\n"); break;
+                    default: printf("Invalid option! Please enter 0–4.\n");
+                }
+            }
+        }
+
+        printf("END of program");
+        fclose(user);
+        fclose(owner);
+        break;
     }
-
-    printf("END of program");
-    fclose(user);
-    fclose(owner);
     return 0;
 }
