@@ -92,6 +92,182 @@ void show_customers(customer Customers[50], int k, split splitrent[50], split sp
         printf("\n");
     }
 }
+
+
+void save_library_to_file(libraryowner library[], int range_library) {
+    FILE *file = fopen("owner.txt", "w");
+    if (!file) {
+        printf("Error saving file!\n");
+        return;
+    }
+    for (int i = 0; i < range_library; i++) {
+        fprintf(file, "%s %s %s %s %s %.2f %d %.2f %d\n",
+            library[i].ID,
+            library[i].title,
+            library[i].author,
+            library[i].type,
+            library[i].genre,
+            library[i].price,
+            library[i].stock,
+            library[i].rentPrice,
+            library[i].rentStock
+        );
+    }
+    fclose(file);
+}
+
+int add_book(libraryowner library[], int range_library) {
+    if (range_library >= 50) {
+        printf("Library is full!\n");
+        return range_library;
+    }
+
+    libraryowner newBook;
+    printf("Enter new book ID: ");
+    scanf("%s", newBook.ID);
+    printf("Enter title: ");
+    scanf("%s", newBook.title);
+    printf("Enter author: ");
+    scanf("%s", newBook.author);
+    printf("Enter type: ");
+    scanf("%s", newBook.type);
+    printf("Enter genre: ");
+    scanf("%s", newBook.genre);
+    printf("Enter price: ");
+    scanf("%f", &newBook.price);
+    printf("Enter stock: ");
+    scanf("%d", &newBook.stock);
+    printf("Enter rentPrice: ");
+    scanf("%f", &newBook.rentPrice);
+    printf("Enter rentStock: ");
+    scanf("%d", &newBook.rentStock);
+
+    library[range_library] = newBook;
+    range_library++;
+
+    // เรียงลำดับหนังสือตาม ID (Bubble sort)
+    for (int i = 0; i < range_library - 1; i++) {
+        for (int j = 0; j < range_library - i - 1; j++) {
+            if (strcmp(library[j].ID, library[j + 1].ID) > 0) {
+                libraryowner temp = library[j];
+                library[j] = library[j + 1];
+                library[j + 1] = temp;
+            }
+        }
+    }
+
+    save_library_to_file(library, range_library);
+    printf("✅ Book added successfully!\n");
+
+    return range_library;
+}
+
+int remove_book(libraryowner library[], int range_library) {
+    char targetID[10];
+    printf("Enter book ID to remove: ");
+    scanf("%s", targetID);
+
+    int found = 0;
+    for (int i = 0; i < range_library; i++) {
+        if (strcmp(library[i].ID, targetID) == 0) {
+            found = 1;
+            for (int j = i; j < range_library - 1; j++) {
+                library[j] = library[j + 1];
+            }
+            range_library--;
+            break;
+        }
+    }
+
+    if (found) {
+        save_library_to_file(library, range_library);
+        printf("✅ Book with ID %s removed successfully.\n", targetID);
+    } else {
+        printf("❌ Book ID not found.\n");
+    }
+
+    return range_library;
+}
+
+void edit_book(libraryowner library[], int range_library) {
+    char editID[10];
+    printf("Enter book ID to edit: ");
+    scanf("%s", editID);
+
+    int found = 0;
+    for (int i = 0; i < range_library; i++) {
+        if (strcmp(library[i].ID, editID) == 0) {
+            found = 1;
+            char chk;
+
+            printf("Edit Title (y/n): ");
+            scanf(" %c", &chk);
+            if (chk == 'y' || chk == 'Y') {
+                printf("Edit to: ");
+                scanf("%s", library[i].title);
+            }
+
+            printf("Edit Author (y/n): ");
+            scanf(" %c", &chk);
+            if (chk == 'y' || chk == 'Y') {
+                printf("Edit to: ");
+                scanf("%s", library[i].author);
+            }
+
+            printf("Edit Type (y/n): ");
+            scanf(" %c", &chk);
+            if (chk == 'y' || chk == 'Y') {
+                printf("Edit to: ");
+                scanf("%s", library[i].type);
+            }
+
+            printf("Edit Genre (y/n): ");
+            scanf(" %c", &chk);
+            if (chk == 'y' || chk == 'Y') {
+                printf("Edit to: ");
+                scanf("%s", library[i].genre);
+            }
+
+            printf("Edit Sale Price (y/n): ");
+            scanf(" %c", &chk);
+            if (chk == 'y' || chk == 'Y') {
+                printf("Edit to: ");
+                scanf("%f", &library[i].price);
+            }
+
+            printf("Edit Stock (for sale) (y/n): ");
+            scanf(" %c", &chk);
+            if (chk == 'y' || chk == 'Y') {
+                printf("Edit to: ");
+                scanf("%d", &library[i].stock);
+            }
+
+            printf("Edit Rental Price (y/n): ");
+            scanf(" %c", &chk);
+            if (chk == 'y' || chk == 'Y') {
+                printf("Edit to: ");
+                scanf("%f", &library[i].rentPrice);
+            }
+
+            printf("Edit Stock (for rent) (y/n): ");
+            scanf(" %c", &chk);
+            if (chk == 'y' || chk == 'Y') {
+                printf("Edit to: ");
+                scanf("%d", &library[i].rentStock);
+            }
+
+            save_library_to_file(library, range_library);
+            printf("✅ Book ID %s updated successfully!\n", editID);
+            break;
+        }
+    }
+
+    if (!found) {
+        printf("❌ Book ID not found.\n");
+    }
+}
+
+
 // อ่านข้อมูลจากไฟล์(OWNER) ***ห้ามยุ่ง***
 int read_library_file(FILE *owner, libraryowner library[]) {
     int i = 0;
@@ -202,9 +378,9 @@ int main() {
                     printf("3. Edit Book\n");
                     int sub;
                     scanf("%d", &sub);
-                    if(sub == 1) { /* Add book function */ }
-                    else if(sub == 2) { /* Remove book function */ }
-                    else if(sub == 3) { /* Edit book function */ }
+                    if (sub == 1) range_library = add_book(library, range_library);
+                    else if (sub == 2) range_library = remove_book(library, range_library);
+                    else if (sub == 3) edit_book(library, range_library);
                     else printf("Invalid option.\n");
                     break;
                 case 5: printf("Income\n"); break;
