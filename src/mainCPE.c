@@ -562,7 +562,7 @@ int main() {
             } else {
                 switch (selection) {
                     case 1: printf("History rent\n"); break;
-                    case 2: printf("Money\n"); break;
+                    case 2: printf("Money\n"); money(Customers,id); break;
                     case 3: printf("Show book\n"); show_book(library,range_library); break;
                     case 4: printf("Rent\n"); break;
                     case 0: printf("Exit user mode.\n"); break;
