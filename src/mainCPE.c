@@ -83,11 +83,11 @@ int userSignUp(customer Customers[], int range_customers) {
         printf("Error opening user file!\n");
     }
 
-    printf("✅ User account created successfully!\n");
+    printf("User account created successfully!\n");
     return range_customers;
 }
 
-int userLogin(customer Customers[50], int k){//Jay
+int userLogin(customer Customers[50], int k, int *locate_user_index){//Jay
     char userID[30],userPass[30];
     printf("------------------------------------------------\n");
     for(int i=0; i<3; i++){
@@ -98,6 +98,7 @@ int userLogin(customer Customers[50], int k){//Jay
         printf("------------------------------------------------\n");
         for(int j=0; j<k; j++){
             if (strcmp(userID, Customers[j].ID) == 0 && strcmp(userPass,"1234") == 0) {
+                *locate_user_index = j;
                 return 1;
             } 
         }
@@ -181,9 +182,8 @@ void show_customers(customer Customers[50], int k, split splitrent[50], split sp
     }
 }
 
-
 void save_library_to_file(libraryowner library[], int range_library) {
-    FILE *file = fopen("owner.txt", "w");
+    FILE *file = fopen("ownerCPE.txt", "w");
     if (!file) {
         printf("Error saving file!\n");
         return;
@@ -203,9 +203,9 @@ void save_library_to_file(libraryowner library[], int range_library) {
     }
     fclose(file);
 }
-/*
+
 void save_customer_to_file(customer Customers[], int range_customers) {
-    FILE *file = fopen("user.txt", "w");
+    FILE *file = fopen("userCPE.txt", "w");
     if (!file) {
         printf("Error saving customer file!\n");
         return;
@@ -228,9 +228,22 @@ void save_customer_to_file(customer Customers[], int range_customers) {
     }
 
     fclose(file);
-    printf("✅ Customer data saved successfully!\n");
+    printf("Customer data saved successfully!\n");
 }
-*/
+
+void money(customer Customers[], int range_customer, int *locate_user_index){//Mick
+    float top_up;
+    printf("To go back: Enter -1\n");
+    printf("How much do you want to top up? ");
+    scanf("%f", &top_up);
+
+    if(top_up == -1) return; // ออกถ้าไม่ต้องการเติม
+
+    Customers[*locate_user_index].money += top_up;
+    save_customer_to_file(Customers, range_customer);
+    printf("Top-up successful! Your new balance: %.2f\n", Customers[*locate_user_index].money);
+}
+
 int add_book(libraryowner library[], int range_library) {
     if (range_library >= 50) {
         printf("Library is full!\n");
@@ -272,7 +285,7 @@ int add_book(libraryowner library[], int range_library) {
     }
 
     save_library_to_file(library, range_library);
-    printf("✅ Book added successfully!\n");
+    printf("Book added successfully!\n");
 
     return range_library;
 }
@@ -296,9 +309,9 @@ int remove_book(libraryowner library[], int range_library) {
 
     if (found) {
         save_library_to_file(library, range_library);
-        printf("✅ Book with ID %s removed successfully.\n", targetID);
+        printf("Book with ID %s removed successfully.\n", targetID);
     } else {
-        printf("❌ Book ID not found.\n");
+        printf("Book ID not found.\n");
     }
 
     return range_library;
@@ -372,13 +385,13 @@ void edit_book(libraryowner library[], int range_library) {
             }
 
             save_library_to_file(library, range_library);
-            printf("✅ Book ID %s updated successfully!\n", editID);
+            printf("Book ID %s updated successfully!\n", editID);
             break;
         }
     }
 
     if (!found) {
-        printf("❌ Book ID not found.\n");
+        printf("Book ID not found.\n");
     }
 }
 
@@ -452,11 +465,12 @@ int main() {
 
 
     ///////////////////////main///////////////////////
-    //login owner user 
     
 
     //login Jay
     int login_state; // 0 not pass, 1 pass
+    int user_index;
+    int *locate_user_index = &user_index;
     while (1){
         int login = -1;
         printf("Login as (0 = owner, 1 = user): ");
@@ -482,7 +496,7 @@ int main() {
                 continue;
             }
             else if (pick == 2){
-                login_state = userLogin(Customers, range_customers);
+                login_state = userLogin(Customers, range_customers, locate_user_index);
                 if (login_state == 0){
                     printf("ID or password is incorrect. Please enter again.\n");
                     printf("------------------------------------------------\n");
@@ -545,20 +559,19 @@ int main() {
                         break;
                     case 5: printf("Income\n"); break;
                     case 0: printf("Exit owner mode.\n"); break;
-                    default: printf("Invalid option! Please enter 0–5.\n");
+                    default: printf("Invalid option! Please enter 0-5.\n");
                 }
             } else {
                 switch (selection) {
                     case 1: printf("History rent\n"); break;
-                    case 2: printf("Money\n"); break;
+                    case 2: printf("Money\n"); money(Customers, range_customers, locate_user_index); break;
                     case 3: printf("Show book\n"); show_book(library,range_library); break;
                     case 4: printf("Rent\n"); break;
                     case 0: printf("Exit user mode.\n"); break;
-                    default: printf("Invalid option! Please enter 0–4.\n");
+                    default: printf("Invalid option! Please enter 0-4.\n");
                 }
             }
         }
-
         printf("END of program");
         fclose(user);
         fclose(owner);
