@@ -432,6 +432,18 @@ int read_customer_file(FILE *user, customer Customers[], split splitrent[], spli
     return i; // คืนค่าจำนวนลูกค้าที่อ่านได้
 }
 
+void money(customer Customers[],int id){//Mick
+    float top_up;
+    printf("To go back: Enter -1");
+    printf("How much do you want to top up?\n");
+    scanf("%f", &top_up);
+
+    if(top_up == -1){/*go back*/}
+
+    Customers[id].money = top_up;
+    save_customer_to_file(Customers,range_customer);
+}
+
 int main() {
     FILE *owner = fopen("ownerCPE.txt", "r");
     FILE *user = fopen("userCPE.txt", "r");
