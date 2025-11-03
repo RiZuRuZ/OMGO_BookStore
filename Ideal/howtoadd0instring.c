@@ -1,4 +1,4 @@
 #include <stdio.h>
 int main(){
-    printf("%03d",10);
+    printf("%03d",12);
 }
