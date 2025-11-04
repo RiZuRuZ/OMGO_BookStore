@@ -846,7 +846,7 @@ int main() {
                 switch (selection) {
                     case 1: printf("Show book\n"); show_book(library,range_library); break;
                     case 2: printf("Show customer\n"); show_customers(Customers, range_customers, splitrent, splithistory, library); break;
-                    case 3: printf("System rent\n"); revenue(Income, range_income); break;
+                    case 3: printf("System rent\n"); break;
                     case 4:
                         printf("Change Mode:\n");
                         printf("1. Add Book\n");
@@ -859,7 +859,7 @@ int main() {
                         else if (sub == 3) edit_book(library, range_library);
                         else printf("Invalid option.\n");
                         break;
-                    case 5: printf("Income\n"); break;
+                    case 5: printf("Income\n"); revenue(Income, range_income); break;
                     case 0: printf("Exit owner mode.\n"); break;
                     default: printf("Invalid option! Please enter 0-5.\n");
                 }
