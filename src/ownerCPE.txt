@@ -5,7 +5,7 @@ B004 Python_for_Beginners Siriporn_Saengsai Textbook Programming 350 25 35 1
 B005 Web_Design_with_HTML_&_CSS Natthaphon_Kosol Textbook Web_Development 280 20 28 1
 B006 Data_Structures_and_Algorithms Piyawat_Kasemsuk Textbook Computer_Science 400 30 40 1
 B007 Computer_Operating_Systems Surachai_Nakaviroj Textbook Operating_Systems 380 25 38 1
-B008 Introduction_to_Computer_Networks Manop_Saengthong Textbook Networking 360 25 36 1
+B008 Introduction_to_Computer_Networks Manop_Saengthong Textbook Networking 360 25 36 0
 B009 Basic_Java Arunee_Phichitchai Textbook Programming 340 25 34 1
 B010 Mobile_Application_Development Weerasak_Anurak General_Book Mobile_Development 420 30 42 0
 B011 Cybersecurity_101 Thanakrit_Jitphattana General_Book Security 500 35 50 0
