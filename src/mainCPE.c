@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
+#include <time.h>
+#include <locale.h>
 
 typedef struct {
     char ID[10];
+    char pass[30];
     char name[50];
     int age;
     int gender; // 0: Female, 1: Male
@@ -33,6 +36,23 @@ typedef struct {
     int count;
 } split;
 
+typedef struct {
+    int day;
+    int month;
+    int year;
+} DateInfo;
+
+void date(DateInfo *today) {
+    setlocale(LC_ALL, "th_TH.UTF-8");
+
+    time_t t = time(NULL);
+    struct tm *tm_info = localtime(&t);
+
+    today->day = tm_info->tm_mday;
+    today->month = tm_info->tm_mon + 1;
+    today->year = tm_info->tm_year + 1900;
+}
+
 int userSignUp(customer Customers[], int range_customers) {
     if (range_customers >= 50) {
         printf("User database is full!\n");
@@ -60,6 +80,9 @@ int userSignUp(customer Customers[], int range_customers) {
     printf("Enter phone: ");
     scanf("%s", newUser.phone);
 
+    printf("Set your password: ");
+    scanf("%s", newUser.pass);
+
     newUser.money = 0.0f;
     strcpy(newUser.rentBook, "");
     strcpy(newUser.rentDate, "");
@@ -73,8 +96,8 @@ int userSignUp(customer Customers[], int range_customers) {
     // บันทึกลงไฟล์
     FILE *file = fopen("userCPE.txt", "a");
     if (file) {
-        fprintf(file, "%s %s %d %d %s %s %.2f %s %s %s %s\n",
-            newUser.ID, newUser.name, newUser.age, newUser.gender,
+        fprintf(file, "%s %s %s %d %d %s %s %.2f %s %s %s %s\n",
+            newUser.ID, newUser.pass ,newUser.name, newUser.age, newUser.gender,
             newUser.email, newUser.phone, newUser.money,
             newUser.rentBook, newUser.rentDate, newUser.returnDate, newUser.history
         );
@@ -97,7 +120,7 @@ int userLogin(customer Customers[50], int k, int *locate_user_index){//Jay
         scanf("%s",userPass);
         printf("------------------------------------------------\n");
         for(int j=0; j<k; j++){
-            if (strcmp(userID, Customers[j].ID) == 0 && strcmp(userPass,"1234") == 0) {
+            if (strcmp(userID, Customers[j].ID) == 0 && strcmp(userPass, Customers[j].pass) == 0) {
                 *locate_user_index = j;
                 return 1;
             } 
@@ -212,8 +235,9 @@ void save_customer_to_file(customer Customers[], int range_customers) {
     }
 
     for (int i = 0; i < range_customers; i++) {
-        fprintf(file, "%s %s %d %d %s %s %.2f %s %s %s %s\n",
+        fprintf(file, "%s %s %s %d %d %s %s %.2f %s %s %s %s\n",
             Customers[i].ID,
+            Customers[i].pass,
             Customers[i].name,
             Customers[i].age,
             Customers[i].gender,
@@ -243,6 +267,120 @@ void money(customer Customers[], int range_customer, int *locate_user_index){//M
     save_customer_to_file(Customers, range_customer);
     printf("Top-up successful! Your new balance: %.2f\n", Customers[*locate_user_index].money);
 }
+
+void save_income(const char *bookID, float amount) {
+    DateInfo today;
+    date(&today);
+
+    FILE *f = fopen("income.txt", "a");
+    if (!f) {
+        printf("Error opening income file!\n");
+        return;
+    }
+    fprintf(f, "%02d/%02d/%04d %s %.2f\n",
+            today.day, today.month, today.year, bookID, amount);
+    fclose(f);
+}
+
+void Rent_Book(libraryowner library[], customer Customers[], int range_library, int *locate_user_index, int range_customer) {
+    int Amount;
+    char Temp_Book_ID[10];
+    char sure;
+    DateInfo today;
+    char Temp_Date[20];
+    char Temp_Return[20];
+    int i;
+
+    if(strlen(Customers[*locate_user_index].rentBook) == 0){
+        printf("------------------ Rent Menu ------------------\n");
+        printf("You are in borrow menu\n");
+        printf("------------------ Book List ------------------\n");
+        for (i = 0; i < range_library; i++) {
+            printf("BOOK %s: %s, rentPrice %.2f, rentStock %d\n",
+                library[i].ID, library[i].title,
+                library[i].rentPrice, library[i].rentStock);
+        }
+
+        printf("------------------------------------------------\n");
+        printf("How many books do you want to borrow?: ");
+        scanf("%d", &Amount);
+
+        if (Amount <= 0) {
+            printf("Invalid amount.\n");
+            return;
+        }
+
+        i = 0;
+        while (i < Amount) {
+            printf("Please input your %d book ID: ", i + 1);
+            scanf("%s", Temp_Book_ID);
+
+            // หาหนังสือจาก ID
+            int found = -1;
+            for (int j = 0; j < range_library; j++) {
+                if (strcmp(library[j].ID, Temp_Book_ID) == 0) {
+                    found = j;
+                    break;
+                }
+            }
+
+            if (found == -1) {
+                printf("Book ID %s not found.\n", Temp_Book_ID);
+                continue;
+            }
+
+            /*
+            if (library[found].rentStock <= 0) {
+                printf("Sorry, %s is out of stock.\n", library[found].title);
+                continue;
+            }
+            */
+
+            printf("You want '%s' (y/n): ", library[found].title);
+            scanf(" %c", &sure);
+            if (sure == 'n' || sure == 'N') continue;
+
+            // เช็กเงินผู้ใช้พอไหม
+            if (Customers[*locate_user_index].money < library[found].rentPrice) {
+                printf("Not enough balance! Please top up first.\n");
+                continue;
+            }
+
+            // หักเงินและอัปเดตสต็อก
+            Customers[*locate_user_index].money -= library[found].rentPrice;
+            library[found].rentStock--;
+
+            // เก็บข้อมูลวันยืม/คืน
+            date(&today);
+            sprintf(Temp_Date, "%02d/%02d/%04d", today.day, today.month, today.year);
+            sprintf(Temp_Return, "%02d/%02d/%04d", today.day + 4, today.month, today.year);
+
+            strcpy(Customers[*locate_user_index].rentDate, Temp_Date);
+            strcpy(Customers[*locate_user_index].returnDate, Temp_Return);
+
+            // เพิ่มหนังสือลง rentBook
+            if (strlen(Customers[*locate_user_index].rentBook) > 0)
+                strcat(Customers[*locate_user_index].rentBook, "&");
+            strcat(Customers[*locate_user_index].rentBook, Temp_Book_ID);
+
+            // เพิ่มลง history
+            if (strlen(Customers[*locate_user_index].history) > 0)
+                strcat(Customers[*locate_user_index].history, "&");
+            strcat(Customers[*locate_user_index].history, Temp_Book_ID);
+
+            printf("Book '%s' borrowed successfully!\n", library[found].title);
+
+            // บันทึกรายได้ร้าน
+            save_income(Temp_Book_ID, library[found].rentPrice);
+            i++;
+        }
+
+        // เซฟข้อมูลทั้งหมดกลับลงไฟล์
+        save_customer_to_file(Customers, range_customer);
+        save_library_to_file(library, range_library);
+    }
+}
+
 
 int add_book(libraryowner library[], int range_library) {
     if (range_library >= 50) {
@@ -420,8 +558,9 @@ int read_customer_file(FILE *user, customer Customers[], split splitrent[], spli
     char tempRentBook[200];
     char tempHistory[1000];
 
-    while (fscanf(user, "%s %s %d %d %s %s %f %s %s %s %s",
+    while (fscanf(user, "%s %s %s %d %d %s %s %f %s %s %s %s",
         Customers[i].ID,
+        Customers[i].pass,
         Customers[i].name,
         &Customers[i].age,
         &Customers[i].gender,
@@ -566,7 +705,7 @@ int main() {
                     case 1: printf("History rent\n"); break;
                     case 2: printf("Money\n"); money(Customers, range_customers, locate_user_index); break;
                     case 3: printf("Show book\n"); show_book(library,range_library); break;
-                    case 4: printf("Rent\n"); break;
+                    case 4: printf("Rent\n"); Rent_Book(library, Customers, range_library, locate_user_index, range_customers); break;
                     case 0: printf("Exit user mode.\n"); break;
                     default: printf("Invalid option! Please enter 0-4.\n");
                 }
