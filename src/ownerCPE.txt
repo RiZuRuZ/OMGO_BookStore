@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 B001 Programming_Fundamentals_with_C_Language Warapong_Intarasuk Textbook Programming 320.00 25 32.00 1
 B002 Basic_Electronics Somkid_Thammarong Textbook Electronics 290.00 20 29.00 1
 B003 Artificial_Intelligence_for_Beginners Nattawut_Chanwit General_Book Artificial_Intelligenc 450.00 30 45.00 1
@@ -13,18 +12,3 @@ B011 Cybersecurity_101 Thanakrit_Jitphattana General_Book Security 500.00 35 50.
 B012 Programming_with_C++ Wasin_Phongphattana Textbook Programming 380.00 25 38.00 1
 B013 Basic_Machine_Learning Rattanawadee_Kiatchai General_Book Artificial_Intelligenc 480.00 30 48.00 3
 M001 Shino_to_Ren_Vol(1) Chigusa_Minori manga yuri 295.00 20 30.00 20
-=======
-B001 Programming_Fundamentals_with_C_Language Warapong_Intarasuk Textbook Programming 320 25 32 1
-B002 Basic_Electronics Somkid_Thammarong Textbook Electronics 290 20 29 1
-B003 Artificial_Intelligence_for_Beginners Nattawut_Chanwit General_Book Artificial_Intelligence 450 30 45 1
-B004 Python_for_Beginners Siriporn_Saengsai Textbook Programming 350 25 35 1
-B005 Web_Design_with_HTML_&_CSS Natthaphon_Kosol Textbook Web_Development 280 20 28 1
-B006 Data_Structures_and_Algorithms Piyawat_Kasemsuk Textbook Computer_Science 400 30 40 1
-B007 Computer_Operating_Systems Surachai_Nakaviroj Textbook Operating_Systems 380 25 38 1
-B008 Introduction_to_Computer_Networks Manop_Saengthong Textbook Networking 360 25 36 0
-B009 Basic_Java Arunee_Phichitchai Textbook Programming 340 25 34 1
-B010 Mobile_Application_Development Weerasak_Anurak General_Book Mobile_Development 420 30 42 0
-B011 Cybersecurity_101 Thanakrit_Jitphattana General_Book Security 500 35 50 0
-B012 Programming_with_C++ Wasin_Phongphattana Textbook Programming 380 25 38 0
-B013 Basic_Machine_Learning Rattanawadee_Kiatchai General_Book Artificial_Intelligence 480 30 48 1
->>>>>>> 776680e14252c23b43d6f10eb958ca65732a91dd
