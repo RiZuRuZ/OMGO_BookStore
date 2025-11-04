@@ -205,6 +205,20 @@ void show_customers(customer Customers[50], int k, split splitrent[50], split sp
     }
 }
 
+void show_HistoryRent(customer Customers[50], int *i){
+    if(strlen(Customers[*i].rentBook) == 0){
+        printf("There is no information in the system.\n");
+    } else {
+        printf("Customers ID %s: %s\nRentBook: %s\nRentDate: %s, ReturnDate: %s\nHistory: %s\n",
+        Customers[*i].ID, Customers[*i].name,
+        Customers[*i].rentBook, Customers[*i].rentDate, 
+        Customers[*i].returnDate, Customers[*i].history);
+    }
+    
+}
+
+
+
 void save_library_to_file(libraryowner library[], int range_library) {
     FILE *file = fopen("ownerCPE.txt", "w");
     if (!file) {
@@ -627,6 +641,7 @@ int main() {
             int pick;
             printf("1. Sign up\n");
             printf("2. Sign in\n");
+            printf("------------------------------------------------\n");
             printf("Selection: ");
             scanf("%d", &pick);
 
@@ -666,7 +681,12 @@ int main() {
                 printf("0. Exit\n");
                 printf("------------------------------------------------\n");
             } else {  // User menu
-                printf("\n--- User Menu ---\n");
+                printf("------------------ User Menu -------------------\n");
+                printf("Profile\n Customer ID %s: %s, money %.2f\n",
+                Customers[*locate_user_index].ID, 
+                Customers[*locate_user_index].name, 
+                Customers[*locate_user_index].money);
+                printf("------------------------------------------------\n");
                 printf("1. History rent\n");
                 printf("2. Money\n");
                 printf("3. Show book\n");
@@ -702,7 +722,7 @@ int main() {
                 }
             } else {
                 switch (selection) {
-                    case 1: printf("History rent\n"); break;
+                    case 1: printf("History rent\n"); show_HistoryRent(Customers, locate_user_index); break;
                     case 2: printf("Money\n"); money(Customers, range_customers, locate_user_index); break;
                     case 3: printf("Show book\n"); show_book(library,range_library); break;
                     case 4: printf("Rent\n"); Rent_Book(library, Customers, range_library, locate_user_index, range_customers); break;
