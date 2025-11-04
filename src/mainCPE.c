@@ -42,6 +42,20 @@ typedef struct {
     int year;
 } DateInfo;
 
+// typedef struct {
+//     int day;
+//     int month;
+//     int year;
+//     float income;
+//     float total;
+// } IncomeData;
+
+typedef struct{
+    float income;
+    float total;
+    char date[11];
+}storeIncome;
+
 void date(DateInfo *today) {
     setlocale(LC_ALL, "th_TH.UTF-8");
 
@@ -205,6 +219,37 @@ void show_customers(customer Customers[50], int k, split splitrent[50], split sp
     }
 }
 
+void show_HistoryRent(customer Customers[50], int *i){
+    if(strlen(Customers[*i].rentBook) == 0){
+        printf("There is no information in the system.\n");
+    } else {
+        printf("Customers ID %s: %s\nRentBook: %s\nRentDate: %s, ReturnDate: %s\nHistory: %s\n",
+        Customers[*i].ID, Customers[*i].name,
+        Customers[*i].rentBook, Customers[*i].rentDate, 
+        Customers[*i].returnDate, Customers[*i].history);
+    }
+    
+}
+
+
+void show_income(storeIncome Income[], int count) {
+    if (count == 0) {
+        printf("No income records found.\n");
+        return;
+    }
+
+    printf("\n========== STORE INCOME RECORDS ==========\n");
+    printf("%-12s %-10s %-10s\n", "Date", "Income", "Total");
+    printf("------------------------------------------\n");
+    for (int i = 0; i < count; i++) {
+        printf("%-12s %10.2f %10.2f\n",
+               Income[i].date,
+               Income[i].income,
+               Income[i].total);
+    }
+    printf("------------------------------------------\n\n");
+}
+
 void save_library_to_file(libraryowner library[], int range_library) {
     FILE *file = fopen("ownerCPE.txt", "w");
     if (!file) {
@@ -252,7 +297,22 @@ void save_customer_to_file(customer Customers[], int range_customers) {
     }
 
     fclose(file);
-    printf("Customer data saved successfully!\n");
+    //printf("Customer data saved successfully!\n");
+}
+
+void revenue(storeIncome Income[], int count) {
+    printf("\n-------------------- Store Revenue --------------------\n");
+    printf("%-12s %-10s %-12s\n", "Date", "Income", "Total Income");
+    printf("--------------------------------------------------------\n");
+
+    for (int i = 0; i < count; i++) {
+        printf("%-12s %-10.2f %-12.2f\n",
+               Income[i].date, Income[i].income, Income[i].total);
+    }
+
+    printf("--------------------------------------------------------\n");
+    printf("📄 Total records: %d | Final total: %.2f\n",
+           count, Income[count - 1].total);
 }
 
 void money(customer Customers[], int range_customer, int *locate_user_index){//Mick
@@ -268,18 +328,37 @@ void money(customer Customers[], int range_customer, int *locate_user_index){//M
     printf("Top-up successful! Your new balance: %.2f\n", Customers[*locate_user_index].money);
 }
 
-void save_income(const char *bookID, float amount) {
+void save_income(float today_income) {
+    FILE *r = fopen("income.txt", "r");
+    float last_total = 0.0f;
+    if (r != NULL) {
+        char date[11];
+        float inc, tot;
+        while (fscanf(r, "%s %f %f", date, &inc, &tot) == 3) {
+            last_total = tot;
+        }
+        fclose(r);
+    }
+
+    float new_total = last_total + today_income;
+
     DateInfo today;
     date(&today);
 
-    FILE *f = fopen("income.txt", "a");
-    if (!f) {
-        printf("Error opening income file!\n");
+    FILE *a = fopen("income.txt", "a");
+    if (a == NULL) {
+        printf("Cannot open income.txt for writing!\n");
         return;
     }
-    fprintf(f, "%02d/%02d/%04d %s %.2f\n",
-            today.day, today.month, today.year, bookID, amount);
-    fclose(f);
+
+    fprintf(a, "%02d/%02d/%04d %.2f %.2f\n",
+            today.day, today.month, today.year,
+            today_income, new_total);
+    fclose(a);
+
+    printf("Income saved for %02d/%02d/%04d | +%.2f (Total: %.2f)\n",
+           today.day, today.month, today.year,
+           today_income, new_total);
 }
 
 void Rent_Book(libraryowner library[], customer Customers[], int range_library, int *locate_user_index, int range_customer) {
@@ -296,7 +375,7 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
         printf("You are in borrow menu\n");
         printf("------------------ Book List ------------------\n");
         for (i = 0; i < range_library; i++) {
-            printf("BOOK %s: %s, rentPrice %.2f, rentStock %d\n",
+            printf("BOOK %s: %s, \trentPrice %.2f, \trentStock %d\n",
                 library[i].ID, library[i].title,
                 library[i].rentPrice, library[i].rentStock);
         }
@@ -329,50 +408,56 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
                 continue;
             }
 
-            /*
-            if (library[found].rentStock <= 0) {
+            if(library[found].rentStock >= library[found].stock){
                 printf("Sorry, %s is out of stock.\n", library[found].title);
                 continue;
             }
-            */
 
             printf("You want '%s' (y/n): ", library[found].title);
             scanf(" %c", &sure);
-            if (sure == 'n' || sure == 'N') continue;
+            if (sure == 'n' || sure == 'N') {
+                printf("Please enter book ID again.\n");
+                continue;
+            }else if(sure == 'y' || sure == 'Y'){
+                // เช็กเงินผู้ใช้พอไหม
+                if (Customers[*locate_user_index].money < library[found].rentPrice) {
+                    printf("Not enough balance! Please top up first.\n");
+                    break;
+                }
 
-            // เช็กเงินผู้ใช้พอไหม
-            if (Customers[*locate_user_index].money < library[found].rentPrice) {
-                printf("Not enough balance! Please top up first.\n");
+                // เพิ่มหนังสือที่ถูกยืม
+                library[found].rentStock += 1;
+
+                // หักเงินค้ายืมหนังสือ
+                Customers[*locate_user_index].money -= library[found].rentPrice;
+
+                // เก็บข้อมูลวันยืม/คืน
+                date(&today);
+                sprintf(Temp_Date, "%02d/%02d/%04d", today.day, today.month, today.year);
+                sprintf(Temp_Return, "%02d/%02d/%04d", today.day + 4, today.month, today.year);
+
+                strcpy(Customers[*locate_user_index].rentDate, Temp_Date);
+                strcpy(Customers[*locate_user_index].returnDate, Temp_Return);
+
+                // เพิ่มหนังสือลง rentBook
+                if (strlen(Customers[*locate_user_index].rentBook) > 0)
+                    strcat(Customers[*locate_user_index].rentBook, "&");
+                strcat(Customers[*locate_user_index].rentBook, Temp_Book_ID);
+
+                // เพิ่มลง history
+                if (strlen(Customers[*locate_user_index].history) > 0)
+                    strcat(Customers[*locate_user_index].history, "&");
+                strcat(Customers[*locate_user_index].history, Temp_Book_ID);
+
+                printf("Book '%s' borrowed successfully!\n", library[found].title);
+
+                // บันทึกรายได้ร้าน
+                save_income(library[found].rentPrice);
+                i++;
+            }else{
+                printf("Invalid! Please enter book ID again.\n");
                 continue;
             }
-
-            // หักเงินและอัปเดตสต็อก
-            Customers[*locate_user_index].money -= library[found].rentPrice;
-            library[found].rentStock--;
-
-            // เก็บข้อมูลวันยืม/คืน
-            date(&today);
-            sprintf(Temp_Date, "%02d/%02d/%04d", today.day, today.month, today.year);
-            sprintf(Temp_Return, "%02d/%02d/%04d", today.day + 4, today.month, today.year);
-
-            strcpy(Customers[*locate_user_index].rentDate, Temp_Date);
-            strcpy(Customers[*locate_user_index].returnDate, Temp_Return);
-
-            // เพิ่มหนังสือลง rentBook
-            if (strlen(Customers[*locate_user_index].rentBook) > 0)
-                strcat(Customers[*locate_user_index].rentBook, "&");
-            strcat(Customers[*locate_user_index].rentBook, Temp_Book_ID);
-
-            // เพิ่มลง history
-            if (strlen(Customers[*locate_user_index].history) > 0)
-                strcat(Customers[*locate_user_index].history, "&");
-            strcat(Customers[*locate_user_index].history, Temp_Book_ID);
-
-            printf("Book '%s' borrowed successfully!\n", library[found].title);
-
-            // บันทึกรายได้ร้าน
-            save_income(Temp_Book_ID, library[found].rentPrice);
-            i++;
         }
 
         // เซฟข้อมูลทั้งหมดกลับลงไฟล์
@@ -555,43 +640,114 @@ int read_library_file(FILE *owner, libraryowner library[]) {
 // อ่านข้อมูลจากไฟล์(USER) ***ห้ามยุ่ง***
 int read_customer_file(FILE *user, customer Customers[], split splitrent[], split splithistory[]) {
     int i = 0;
-    char tempRentBook[200];
-    char tempHistory[1000];
+    char line[1500];              // เก็บทั้งบรรทัด
+    char tempRentBook[200] = "";
+    char tempHistory[1000] = "";
 
-    while (fscanf(user, "%s %s %s %d %d %s %s %f %s %s %s %s",
-        Customers[i].ID,
-        Customers[i].pass,
-        Customers[i].name,
-        &Customers[i].age,
-        &Customers[i].gender,
-        Customers[i].email,
-        Customers[i].phone,
-        &Customers[i].money,
-        Customers[i].rentBook,
-        Customers[i].rentDate,
-        Customers[i].returnDate,
-        Customers[i].history) != EOF) {
+    while (fgets(line, sizeof(line), user) != NULL) {
+        // เคลียร์ค่าก่อน
+        strcpy(Customers[i].rentBook, "");
+        strcpy(Customers[i].rentDate, "");
+        strcpy(Customers[i].returnDate, "");
+        strcpy(Customers[i].history, "");
 
-        // แยก string ด้วย comma
-        strcpy(tempRentBook, Customers[i].rentBook);
-        splitrent[i].count = splitString(tempRentBook, splitrent[i].arr);
+        int count = sscanf(line, "%s %s %s %d %d %s %s %f %s %s %s %s",
+            Customers[i].ID,
+            Customers[i].pass,
+            Customers[i].name,
+            &Customers[i].age,
+            &Customers[i].gender,
+            Customers[i].email,
+            Customers[i].phone,
+            &Customers[i].money,
+            Customers[i].rentBook,
+            Customers[i].rentDate,
+            Customers[i].returnDate,
+            Customers[i].history
+        );
 
-        strcpy(tempHistory, Customers[i].history);
-        splithistory[i].count = splitString(tempHistory, splithistory[i].arr);
+        // ถ้าอ่านได้อย่างน้อย 8 ตัว (ถึง money) ถือว่า valid
+        if (count >= 8) {
+            // แยก rentBook
+            if (strlen(Customers[i].rentBook) > 0) {
+                strcpy(tempRentBook, Customers[i].rentBook);
+                splitrent[i].count = splitString(tempRentBook, splitrent[i].arr);
+            } else {
+                splitrent[i].count = 0;
+            }
 
+            // แยก history
+            if (strlen(Customers[i].history) > 0) {
+                strcpy(tempHistory, Customers[i].history);
+                splithistory[i].count = splitString(tempHistory, splithistory[i].arr);
+            } else {
+                splithistory[i].count = 0;
+            }
+
+            i++;
+        }
+    }
+
+    return i; // จำนวนลูกค้าที่อ่านได้จริง
+}
+// int read_customer_file(FILE *user, customer Customers[], split splitrent[], split splithistory[]) {
+//     int i = 0;
+//     char tempRentBook[200];
+//     char tempHistory[1000];
+
+//     while (fscanf(user, "%s %s %s %d %d %s %s %f %s %s %s %s",
+//         Customers[i].ID,
+//         Customers[i].pass,
+//         Customers[i].name,
+//         &Customers[i].age,
+//         &Customers[i].gender,
+//         Customers[i].email,
+//         Customers[i].phone,
+//         &Customers[i].money,
+//         Customers[i].rentBook,
+//         Customers[i].rentDate,
+//         Customers[i].returnDate,
+//         Customers[i].history) != EOF) {
+
+//         // แยก string ด้วย comma
+//         strcpy(tempRentBook, Customers[i].rentBook);
+//         splitrent[i].count = splitString(tempRentBook, splitrent[i].arr);
+
+//         strcpy(tempHistory, Customers[i].history);
+//         splithistory[i].count = splitString(tempHistory, splithistory[i].arr);
+
+//         i++;
+//     }
+//     return i; // คืนค่าจำนวนลูกค้าที่อ่านได้
+// }
+
+int read_income_file(FILE *income, storeIncome Income[], int maxCount) {
+    int i = 0;
+
+    if (income == NULL) {
+        printf("Error: file pointer is NULL.\n");
+        return 0;
+    }
+
+    while (i < maxCount && fscanf(income, "%s %f %f",
+           Income[i].date,
+           &Income[i].income,
+           &Income[i].total) == 3) {
         i++;
     }
-    return i; // คืนค่าจำนวนลูกค้าที่อ่านได้
+
+    return i; // คืนค่าจำนวนข้อมูลที่อ่านได้
 }
 
 int main() {
     FILE *owner = fopen("ownerCPE.txt", "r");
     FILE *user = fopen("userCPE.txt", "r");
-    if (!owner || !user) {
+    FILE *income = fopen("income.txt", "r");
+    if (!owner || !user || !income) {
         printf("Error opening file!\n");
         return 1;
     }
-
+    storeIncome Income[100];
     libraryowner library[50];
     customer Customers[50];
     split splitrent[50], splithistory[50];
@@ -599,6 +755,7 @@ int main() {
     //เรียกใช้ฟังก์ชันอ่านไฟล์
     int range_library = read_library_file(owner, library);
     int range_customers = read_customer_file(user, Customers, splitrent, splithistory);
+    int range_income = read_income_file(income, Income, 100);; //File, struct, maxcount of income history
 
     //printf("Read %d books and %d customers successfully.\n", range_library, range_customers);
 
@@ -627,6 +784,7 @@ int main() {
             int pick;
             printf("1. Sign up\n");
             printf("2. Sign in\n");
+            printf("------------------------------------------------\n");
             printf("Selection: ");
             scanf("%d", &pick);
 
@@ -666,7 +824,12 @@ int main() {
                 printf("0. Exit\n");
                 printf("------------------------------------------------\n");
             } else {  // User menu
-                printf("\n--- User Menu ---\n");
+                printf("------------------ User Menu -------------------\n");
+                printf("Profile\n Customer ID %s: %s, money %.2f\n",
+                Customers[*locate_user_index].ID, 
+                Customers[*locate_user_index].name, 
+                Customers[*locate_user_index].money);
+                printf("------------------------------------------------\n");
                 printf("1. History rent\n");
                 printf("2. Money\n");
                 printf("3. Show book\n");
@@ -683,7 +846,7 @@ int main() {
                 switch (selection) {
                     case 1: printf("Show book\n"); show_book(library,range_library); break;
                     case 2: printf("Show customer\n"); show_customers(Customers, range_customers, splitrent, splithistory, library); break;
-                    case 3: printf("System rent\n"); break;
+                    case 3: printf("System rent\n"); revenue(Income, range_income); break;
                     case 4:
                         printf("Change Mode:\n");
                         printf("1. Add Book\n");
@@ -702,7 +865,7 @@ int main() {
                 }
             } else {
                 switch (selection) {
-                    case 1: printf("History rent\n"); break;
+                    case 1: printf("History rent\n"); show_HistoryRent(Customers, locate_user_index); break;
                     case 2: printf("Money\n"); money(Customers, range_customers, locate_user_index); break;
                     case 3: printf("Show book\n"); show_book(library,range_library); break;
                     case 4: printf("Rent\n"); Rent_Book(library, Customers, range_library, locate_user_index, range_customers); break;
