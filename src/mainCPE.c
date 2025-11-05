@@ -231,6 +231,48 @@ void show_HistoryRent(customer Customers[50], int *i){
     
 }
 
+void show_AllHistoryRent(customer Customers[50], int k) {
+    printf("------------------------------------------------------------------------------------------------------------\n");
+    printf("| %-6s | %-15s | %-20s | %-12s | %-12s | %-30s |\n",
+           "ID", "Name", "Current Rent", "Rent Date", "Return Date", "History");
+    printf("------------------------------------------------------------------------------------------------------------\n");
+
+    for (int i = 0; i < k; i++) {
+        char TempAns[200] = "";
+        char Temprentdate[20] = "";
+        char Tempreturndate[20] = "";
+        char Temphistory[1000] = "";
+
+        // --- ข้อมูลการยืมปัจจุบัน ---
+        if (strlen(Customers[i].rentBook) == 0) {
+            strcpy(TempAns, "-");
+            strcpy(Temprentdate, "-");
+            strcpy(Tempreturndate, "-");
+        } else {
+            strcpy(TempAns, Customers[i].rentBook);
+            strcpy(Temprentdate, Customers[i].rentDate);
+            strcpy(Tempreturndate, Customers[i].returnDate);
+        }
+
+        // --- ประวัติการยืมทั้งหมด ---
+        if (strlen(Customers[i].history) == 0)
+            strcpy(Temphistory, "-");
+        else
+            strcpy(Temphistory, Customers[i].history);
+
+        // --- แสดงผลในรูปตาราง ---
+        printf("| %-6s | %-15s | %-20s | %-12s | %-12s | %-30s |\n",
+               Customers[i].ID,
+               Customers[i].name,
+               TempAns,
+               Temprentdate,
+               Tempreturndate,
+               Temphistory);
+    }
+
+    printf("------------------------------------------------------------------------------------------------------------\n");
+}
+
 
 void show_income(storeIncome Income[], int count) {
     if (count == 0) {
@@ -965,7 +1007,7 @@ int main() {
                 switch (selection) {
                     case 1: printf("Show book\n"); show_book(library,range_library); break;
                     case 2: printf("Show customer\n"); show_customers(Customers, range_customers, splitrent, splithistory, library); break;
-                    case 3: printf("System rent\n"); break;
+                    case 3: printf("System rent\n"); show_AllHistoryRent(Customers, range_customers); break;
                     case 4:
                         printf("Change Mode:\n");
                         printf("1. Add Book\n");
