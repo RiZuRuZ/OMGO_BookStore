@@ -3,12 +3,13 @@ B002 Basic_Electronics Somkid_Thammarong Textbook Electronics 290.00 20 29.00 1
 B003 Artificial_Intelligence_for_Beginners Nattawut_Chanwit General_Book Artificial_Intelligenc 450.00 30 45.00 1
 B004 Python_for_Beginners Siriporn_Saengsai Textbook Programming 350.00 25 35.00 1
 B005 Web_Design_with_HTML_&_CSS Natthaphon_Kosol Textbook Web_Development 280.00 20 28.00 1
-B006 Data_Structures_and_Algorithms Piyawat_Kasemsuk Textbook Computer_Science 400.00 30 40.00 2
+B006 Data_Structures_and_Algorithms Piyawat_Kasemsuk Textbook Computer_Science 400.00 30 40.00 0
 B007 Computer_Operating_Systems Surachai_Nakaviroj Textbook Operating_Systems 380.00 25 38.00 2
 B008 Introduction_to_Computer_Networks Manop_Saengthong Textbook Networking 360.00 25 36.00 0
-B009 Basic_Java Arunee_Phichitchai Textbook Programming 340.00 25 34.00 1
-B010 Mobile_Application_Development Weerasak_Anurak General_Book Mobile_Development 420.00 30 42.00 1
+B009 Basic_Java Arunee_Phichitchai Textbook Programming 340.00 25 34.00 0
+B010 Mobile_Application_Development Weerasak_Anurak General_Book Mobile_Development 420.00 30 42.00 0
 B011 Cybersecurity_101 Thanakrit_Jitphattana General_Book Security 500.00 35 50.00 1
 B012 Programming_with_C++ Wasin_Phongphattana Textbook Programming 380.00 25 38.00 1
-B013 Basic_Machine_Learning Rattanawadee_Kiatchai General_Book Artificial_Intelligenc 480.00 30 48.00 3
+B013 Basic_Machine_Learning Rattanawadee_Kiatchai General_Book Artificial_Intelligenc 480.00 30 48.00 0
 M001 Shino_to_Ren_Vol(1) Chigusa_Minori manga yuri 295.00 20 30.00 20
+M002 Shino_to_Ren_Vol(2) Chigusa_Minori manga yuri 295.00 20 30.00 9

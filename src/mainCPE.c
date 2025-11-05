@@ -280,7 +280,7 @@ void save_customer_to_file(customer Customers[], int range_customers) {
     }
 
     for (int i = 0; i < range_customers; i++) {
-        fprintf(file, "%s %s %s %d %d %s %s %.2f %s %s %s %s\n",
+        fprintf(file, "%s|%s|%s|%d|%d|%s|%s|%.2f|%s|%s|%s|%s\n",
             Customers[i].ID,
             Customers[i].pass,
             Customers[i].name,
@@ -297,7 +297,6 @@ void save_customer_to_file(customer Customers[], int range_customers) {
     }
 
     fclose(file);
-    //printf("Customer data saved successfully!\n");
 }
 
 void revenue(storeIncome Income[], int count) {
@@ -361,30 +360,69 @@ void save_income(float today_income) {
            today_income, new_total);
 }
 
-void Rent_Book(libraryowner library[], customer Customers[], int range_library, int *locate_user_index, int range_customer) {
+int dateDifference(char *actualDate, char *expectedDate) {
+    struct tm actual_tm = {0}, expected_tm = {0};
+
+    // แปลงสตริงวันที่เป็น struct tm
+    sscanf(actualDate, "%d/%d/%d",
+           &actual_tm.tm_mday, &actual_tm.tm_mon, &actual_tm.tm_year);
+    sscanf(expectedDate, "%d/%d/%d",
+           &expected_tm.tm_mday, &expected_tm.tm_mon, &expected_tm.tm_year);
+
+    // ปรับค่าให้เข้ากับรูปแบบ struct tm (เดือนนับจาก 0, ปีนับจาก 1900)
+    actual_tm.tm_mon -= 1;
+    expected_tm.tm_mon -= 1;
+    actual_tm.tm_year -= 1900;
+    expected_tm.tm_year -= 1900;
+
+    // แปลงเป็น time_t
+    time_t t_actual = mktime(&actual_tm);
+    time_t t_expected = mktime(&expected_tm);
+
+    // หาผลต่าง (เป็นวินาที)
+    double diff_seconds = difftime(t_actual, t_expected);
+
+    // แปลงเป็นวัน
+    int diff_days = (int)(diff_seconds / (60 * 60 * 24));
+
+    return diff_days; // อาจเป็นบวก (คืนช้า) หรือศูนย์ หรือลบ (คืนก่อนกำหนด)
+}
+
+void Rent_Book(libraryowner library[], customer Customers[], int range_library, int *locate_user_index, int range_customer, split splitrent[]) {
     int Amount;
     char Temp_Book_ID[10];
     char sure;
     DateInfo today;
+    time_t now = time(NULL);
+    struct tm *local;
     char Temp_Date[20];
     char Temp_Return[20];
-    int i;
+    int i, j;
+    int returnDays;
+    int fine;
 
-    if(strlen(Customers[*locate_user_index].rentBook) == 0){
+    // ถ้ายังไม่ได้ยืม → เข้าหน้ายืม
+    if (strlen(Customers[*locate_user_index].rentBook) == 0) {
         printf("------------------ Rent Menu ------------------\n");
         printf("You are in borrow menu\n");
         printf("------------------ Book List ------------------\n");
+        printf("%-10s %-40s %-10s %-10s\n", "ID", "Title", "Price", "Stock");
+        printf("--------------------------------------------------------------------------\n");
+
         for (i = 0; i < range_library; i++) {
-            printf("BOOK %s: %s, \trentPrice %.2f, \trentStock %d\n",
-                library[i].ID, library[i].title,
-                library[i].rentPrice, library[i].rentStock);
+            printf("%-10s %-40s %-10.2f %-10d\n",
+                library[i].ID,
+                library[i].title,
+                library[i].rentPrice,
+                library[i].rentStock);
         }
 
-        printf("------------------------------------------------\n");
-        printf("How many books do you want to borrow?: ");
+        printf("--------------------------------------------------------------------------\n");
+
+        printf("How many books do you want to borrow? (1-5): ");
         scanf("%d", &Amount);
 
-        if (Amount <= 0) {
+        if (Amount <= 0 || Amount > 5) {
             printf("Invalid amount.\n");
             return;
         }
@@ -394,7 +432,6 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
             printf("Please input your %d book ID: ", i + 1);
             scanf("%s", Temp_Book_ID);
 
-            // หาหนังสือจาก ID
             int found = -1;
             for (int j = 0; j < range_library; j++) {
                 if (strcmp(library[j].ID, Temp_Book_ID) == 0) {
@@ -408,62 +445,121 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
                 continue;
             }
 
-            if(library[found].rentStock >= library[found].stock){
+            if (library[found].rentStock >= library[found].stock) {
                 printf("Sorry, %s is out of stock.\n", library[found].title);
                 continue;
             }
 
             printf("You want '%s' (y/n): ", library[found].title);
             scanf(" %c", &sure);
+
             if (sure == 'n' || sure == 'N') {
                 printf("Please enter book ID again.\n");
                 continue;
-            }else if(sure == 'y' || sure == 'Y'){
-                // เช็กเงินผู้ใช้พอไหม
+            } else if (sure == 'y' || sure == 'Y') {
+                printf("How many days you want to borrow?: ");
+                scanf("%d", &returnDays);
+
                 if (Customers[*locate_user_index].money < library[found].rentPrice) {
                     printf("Not enough balance! Please top up first.\n");
                     break;
                 }
 
-                // เพิ่มหนังสือที่ถูกยืม
                 library[found].rentStock += 1;
-
-                // หักเงินค้ายืมหนังสือ
                 Customers[*locate_user_index].money -= library[found].rentPrice;
 
-                // เก็บข้อมูลวันยืม/คืน
                 date(&today);
                 sprintf(Temp_Date, "%02d/%02d/%04d", today.day, today.month, today.year);
-                sprintf(Temp_Return, "%02d/%02d/%04d", today.day + 4, today.month, today.year);
+
+                time_t t = now + (returnDays * 24 * 60 * 60);
+                local = localtime(&t);
+                sprintf(Temp_Return, "%02d/%02d/%04d", local->tm_mday, local->tm_mon + 1, local->tm_year + 1900);
 
                 strcpy(Customers[*locate_user_index].rentDate, Temp_Date);
                 strcpy(Customers[*locate_user_index].returnDate, Temp_Return);
 
-                // เพิ่มหนังสือลง rentBook
                 if (strlen(Customers[*locate_user_index].rentBook) > 0)
                     strcat(Customers[*locate_user_index].rentBook, "&");
                 strcat(Customers[*locate_user_index].rentBook, Temp_Book_ID);
 
-                // เพิ่มลง history
                 if (strlen(Customers[*locate_user_index].history) > 0)
                     strcat(Customers[*locate_user_index].history, "&");
                 strcat(Customers[*locate_user_index].history, Temp_Book_ID);
 
                 printf("Book '%s' borrowed successfully!\n", library[found].title);
-
-                // บันทึกรายได้ร้าน
                 save_income(library[found].rentPrice);
                 i++;
-            }else{
+            } else {
                 printf("Invalid! Please enter book ID again.\n");
                 continue;
             }
         }
-
-        // เซฟข้อมูลทั้งหมดกลับลงไฟล์
-        save_customer_to_file(Customers, range_customer);
-        save_library_to_file(library, range_library);
     }
+    // ถ้ามีหนังสือที่ยืมอยู่ → เข้าหน้าคืน
+    else {
+        printf("------------------ Return Menu ------------------\n");
+        printf("You are in return menu\n");
+        printf("------------------------------------------------\n");
+
+        // ✅ แสดงหนังสือที่ยืมอยู่
+        printf("You are currently borrowing:\n");
+        printf("%-10s %-25s %-10s\n", "ID", "Title", "Price");
+        printf("------------------------------------------------\n");
+        for (i = 0; i < range_library; i++) {
+            if (strstr(Customers[*locate_user_index].rentBook, library[i].ID) != NULL) {
+                printf("%-10s %-25s %-10.2f\n",
+                       library[i].ID, library[i].title, library[i].rentPrice);
+            }
+        }
+        printf("------------------------------------------------\n");
+
+        date(&today);
+        sprintf(Temp_Date, "%02d/%02d/%04d", today.day, today.month, today.year);
+
+        int daysLate = dateDifference(Temp_Date, Customers[*locate_user_index].returnDate);
+        if (daysLate < 0) daysLate = 0;
+
+        if (daysLate > 0) {
+            for (i = 0; i < splitrent[*locate_user_index].count; i++) {
+                for (j = 0; j < range_library; j++) {
+                    // ✅ ต้องใช้ == 0
+                    if (strcmp(library[j].ID, splitrent[*locate_user_index].arr[i]) == 0) {
+                        fine = (int)(library[j].rentPrice * 0.5 * daysLate);
+                        printf("You returned '%s' %d day(s) late. Fine: %d\n",
+                               library[j].title, daysLate, fine);
+
+                        if (Customers[*locate_user_index].money >= fine) {
+                            Customers[*locate_user_index].money -= fine;
+                            printf("Fine paid successfully.\n");
+                            save_income(fine);
+                        } else {
+                            printf("Not enough balance to pay fine! Please top up first.\n");
+                            printf("Your balance: %.2f, Need: %d\n", Customers[*locate_user_index].money, fine);
+                            return;
+                        }
+                    }
+                }
+            }
+        } else {
+            printf("Returned on time. Thank you!\n");
+        }
+
+        // ✅ คืนหนังสือทั้งหมด
+        for (i = 0; i < range_library; i++) {
+            if (strstr(Customers[*locate_user_index].rentBook, library[i].ID) != NULL &&
+                library[i].rentStock > 0) {
+                library[i].rentStock -= 1;
+            }
+        }
+
+        // ✅ เคลียร์ข้อมูลยืม
+        strcpy(Customers[*locate_user_index].rentBook, "");
+        strcpy(Customers[*locate_user_index].rentDate, "");
+        strcpy(Customers[*locate_user_index].returnDate, "");
+    }
+
+    save_customer_to_file(Customers, range_customer);
+    save_library_to_file(library, range_library);
 }
 
 
@@ -640,55 +736,78 @@ int read_library_file(FILE *owner, libraryowner library[]) {
 // อ่านข้อมูลจากไฟล์(USER) ***ห้ามยุ่ง***
 int read_customer_file(FILE *user, customer Customers[], split splitrent[], split splithistory[]) {
     int i = 0;
-    char line[1500];              // เก็บทั้งบรรทัด
-    char tempRentBook[200] = "";
-    char tempHistory[1000] = "";
+    char line[1500];
+    char *token;
+    char tempRentBook[200];
+    char tempHistory[1000];
 
     while (fgets(line, sizeof(line), user) != NULL) {
-        // เคลียร์ค่าก่อน
+        // ตัด \n ทิ้งก่อน
+        line[strcspn(line, "\n")] = '\0';
+
+        // เคลียร์ค่า
         strcpy(Customers[i].rentBook, "");
         strcpy(Customers[i].rentDate, "");
         strcpy(Customers[i].returnDate, "");
         strcpy(Customers[i].history, "");
 
-        int count = sscanf(line, "%s %s %s %d %d %s %s %f %s %s %s %s",
-            Customers[i].ID,
-            Customers[i].pass,
-            Customers[i].name,
-            &Customers[i].age,
-            &Customers[i].gender,
-            Customers[i].email,
-            Customers[i].phone,
-            &Customers[i].money,
-            Customers[i].rentBook,
-            Customers[i].rentDate,
-            Customers[i].returnDate,
-            Customers[i].history
-        );
+        // ใช้ strtok แยกตาม "|"
+        token = strtok(line, "|");
+        if (!token) continue; strcpy(Customers[i].ID, token);
 
-        // ถ้าอ่านได้อย่างน้อย 8 ตัว (ถึง money) ถือว่า valid
-        if (count >= 8) {
-            // แยก rentBook
-            if (strlen(Customers[i].rentBook) > 0) {
-                strcpy(tempRentBook, Customers[i].rentBook);
-                splitrent[i].count = splitString(tempRentBook, splitrent[i].arr);
-            } else {
-                splitrent[i].count = 0;
-            }
+        token = strtok(NULL, "|");
+        if (!token) continue; strcpy(Customers[i].pass, token);
 
-            // แยก history
-            if (strlen(Customers[i].history) > 0) {
-                strcpy(tempHistory, Customers[i].history);
-                splithistory[i].count = splitString(tempHistory, splithistory[i].arr);
-            } else {
-                splithistory[i].count = 0;
-            }
+        token = strtok(NULL, "|");
+        if (!token) continue; strcpy(Customers[i].name, token);
 
-            i++;
+        token = strtok(NULL, "|");
+        if (!token) continue; Customers[i].age = atoi(token);
+
+        token = strtok(NULL, "|");
+        if (!token) continue; Customers[i].gender = atoi(token);
+
+        token = strtok(NULL, "|");
+        if (!token) continue; strcpy(Customers[i].email, token);
+
+        token = strtok(NULL, "|");
+        if (!token) continue; strcpy(Customers[i].phone, token);
+
+        token = strtok(NULL, "|");
+        if (!token) continue; Customers[i].money = atof(token);
+
+        token = strtok(NULL, "|");
+        if (token) strcpy(Customers[i].rentBook, token);
+
+        token = strtok(NULL, "|");
+        if (token) strcpy(Customers[i].rentDate, token);
+
+        token = strtok(NULL, "|");
+        if (token) strcpy(Customers[i].returnDate, token);
+
+        token = strtok(NULL, "|");
+        if (token) strcpy(Customers[i].history, token);
+
+        // ---- แยก Rent Book ----
+        if (strlen(Customers[i].rentBook) > 0) {
+            strcpy(tempRentBook, Customers[i].rentBook);
+            splitrent[i].count = splitString(tempRentBook, splitrent[i].arr);
+        } else {
+            splitrent[i].count = 0;
         }
+
+        // ---- แยก History ----
+        if (strlen(Customers[i].history) > 0) {
+            strcpy(tempHistory, Customers[i].history);
+            splithistory[i].count = splitString(tempHistory, splithistory[i].arr);
+        } else {
+            splithistory[i].count = 0;
+        }
+
+        i++;
     }
 
-    return i; // จำนวนลูกค้าที่อ่านได้จริง
+    return i; // จำนวนลูกค้าที่อ่านได้
 }
 // int read_customer_file(FILE *user, customer Customers[], split splitrent[], split splithistory[]) {
 //     int i = 0;
@@ -868,7 +987,7 @@ int main() {
                     case 1: printf("History rent\n"); show_HistoryRent(Customers, locate_user_index); break;
                     case 2: printf("Money\n"); money(Customers, range_customers, locate_user_index); break;
                     case 3: printf("Show book\n"); show_book(library,range_library); break;
-                    case 4: printf("Rent\n"); Rent_Book(library, Customers, range_library, locate_user_index, range_customers); break;
+                    case 4: printf("Rent\n"); Rent_Book(library, Customers, range_library, locate_user_index, range_customers, splitrent); break;
                     case 0: printf("Exit user mode.\n"); break;
                     default: printf("Invalid option! Please enter 0-4.\n");
                 }
