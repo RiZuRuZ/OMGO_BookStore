@@ -1038,6 +1038,7 @@ int main() {
         printf("END of program");
         fclose(user);
         fclose(owner);
+        fclose(income);
         break;
     }
     return 0;
