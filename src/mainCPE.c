@@ -474,25 +474,25 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
             printf("Please input your %d book ID: ", i + 1);
             scanf("%s", Temp_Book_ID);
 
-            int found = -1;
+            int found[5] = -1;
             for (int j = 0; j < range_library; j++) {
                 if (strcmp(library[j].ID, Temp_Book_ID) == 0) {
-                    found = j;
+                    found[i] = j;
                     break;
                 }
             }
 
-            if (found == -1) {
+            if (found[i] == -1) {
                 printf("Book ID %s not found.\n", Temp_Book_ID);
                 continue;
             }
 
-            if (library[found].rentStock >= library[found].stock) {
-                printf("Sorry, %s is out of stock.\n", library[found].title);
+            if (library[found[i]].rentStock >= library[found[i]].stock) {
+                printf("Sorry, %s is out of stock.\n", library[found[i]].title);
                 continue;
             }
 
-            printf("You want '%s' (y/n): ", library[found].title);
+            printf("You want '%s' (y/n): ", library[found[i]].title);
             scanf(" %c", &sure);
 
             if (sure == 'n' || sure == 'N') {
@@ -501,14 +501,15 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
             } else if (sure == 'y' || sure == 'Y') {
                 printf("How many days you want to borrow?: ");
                 scanf("%d", &returnDays);
-
-                if (Customers[*locate_user_index].money < library[found].rentPrice) {
+                if (returnDays < '0' || returnDays > '9'){
+                    printf("Please enter book ID again.\n");
+                    continue;
+                }
+                
+                if (Customers[*locate_user_index].money < library[found[i]].rentPrice) {
                     printf("Not enough balance! Please top up first.\n");
                     break;
                 }
-
-                library[found].rentStock += 1;
-                Customers[*locate_user_index].money -= library[found].rentPrice;
 
                 date(&today);
                 sprintf(Temp_Date, "%02d/%02d/%04d", today.day, today.month, today.year);
@@ -528,13 +529,17 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
                     strcat(Customers[*locate_user_index].history, "&");
                 strcat(Customers[*locate_user_index].history, Temp_Book_ID);
 
-                printf("Book '%s' borrowed successfully!\n", library[found].title);
-                save_income(library[found].rentPrice);
+                printf("Book '%s' borrowed successfully!\n", library[found[i]].title);
                 i++;
             } else {
                 printf("Invalid! Please enter book ID again.\n");
                 continue;
             }
+        }
+        for(int k=0;k<=i;k++){
+            save_income(library[found[k]].rentPrice);
+            library[found[k]].rentStock += 1;
+            Customers[*locate_user_index].money -= library[found[k]].rentPrice;
         }
     }
     // ถ้ามีหนังสือที่ยืมอยู่ → เข้าหน้าคืน
