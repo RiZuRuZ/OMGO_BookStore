@@ -191,33 +191,100 @@ char* search_user_by_id(customer Customers[50], char customer_id[10]) {
     return NULL; // ไม่พบuser
 }
 
-void show_book(libraryowner library[50], int k){ //k is range
-    for(int i = 0; i < k; i++){
-        printf("BOOK %s: %s, author %s, type %s, genre %s, price %.2f, stock %d, rentPrice %.2f, rentStock %d\n",
-                library[i].ID, library[i].title, library[i].author, library[i].type,
-                library[i].genre, library[i].price, library[i].stock,
-                library[i].rentPrice, library[i].rentStock);
+void show_book(libraryowner library[50], int k) {
+
+    printf("---------------------------------------------------------------------------------------------------------------------------\n");
+    printf("| %-6s | %-50s | %-25s | %-20s | %-20s | %-10s | %-8s | %-12s | %-10s |\n",
+           "ID", "Title", "Author", "Type", "Genre", "Price", "Stock", "RentPrice", "RentStock");
+    printf("---------------------------------------------------------------------------------------------------------------------------\n");
+
+    for (int i = 0; i < k; i++) {
+        printf("| %-6s | %-50s | %-25s | %-20s | %-20s | %10.2f | %8d | %12.2f | %10d |\n",
+               library[i].ID,
+               library[i].title,
+               library[i].author,
+               library[i].type,
+               library[i].genre,
+               library[i].price,
+               library[i].stock,
+               library[i].rentPrice,
+               library[i].rentStock
+        );
     }
+
+    printf("---------------------------------------------------------------------------------------------------------------------------\n");
 }
 
-void show_customers(customer Customers[50], int k, split splitrent[50], split splithistory[50], libraryowner library[50]){ //k is range
-    int i,j;
-    for(i = 0; i < k; i++){
-        printf("Customer %s: %s, age %d, gender %d, email %s, phone %s, money %.2f\nRentBook: %s\nRentDate: %s, ReturnDate: %s\nHistory: %s\n",
-            Customers[i].ID, Customers[i].name, Customers[i].age, Customers[i].gender,
-            Customers[i].email, Customers[i].phone, Customers[i].money,
-            Customers[i].rentBook, Customers[i].rentDate, Customers[i].returnDate, Customers[i].history);
 
-        // แสดงผลลัพธ์
+void show_customers(customer Customers[50], int k, split splitrent[50], split splithistory[50], libraryowner library[50]) {
+    int i, j;
+
+    for (i = 0; i < k; i++) {
+
+        printf("==============================================================================================\n");
+        printf("| %-92s |\n", "Customer Information");
+        printf("==============================================================================================\n");
+
+        printf("| %-12s | %-75s |\n", "ID", Customers[i].ID);
+        printf("| %-12s | %-75s |\n", "Name", Customers[i].name);
+
+        char agebuf[10];
+        sprintf(agebuf, "%d", Customers[i].age);
+        printf("| %-12s | %-75s |\n", "Age", agebuf);
+
+        char genderbuf[10];
+        sprintf(genderbuf, "%d", Customers[i].gender);
+        printf("| %-12s | %-75s |\n", "Gender", genderbuf);
+
+        printf("| %-12s | %-75s |\n", "Email", Customers[i].email);
+        printf("| %-12s | %-75s |\n", "Phone", Customers[i].phone);
+
+        char moneybuf[30];
+        sprintf(moneybuf, "%.2f", Customers[i].money);
+        printf("| %-12s | %-75s |\n", "Money", moneybuf);
+
+        printf("==============================================================================================\n");
+
+        // Rent table
+        printf("| %-92s |\n", "Rent Books");
+        printf("==============================================================================================\n");
+        printf("| %-5s | %-15s | %-67s |\n", "No.", "BookID", "Book Title");
+        printf("----------------------------------------------------------------------------------------------\n");
+
         for (j = 0; j < splitrent[i].count; j++) {
-            printf("RentBook[%d] = %s = %s\n", j, splitrent[i].arr[j], search_bookname_by_id(library, splitrent[i].arr[j]));
+            printf("| %-5d | %-15s | %-67s |\n",
+                   j,
+                   splitrent[i].arr[j],
+                   search_bookname_by_id(library, splitrent[i].arr[j]));
         }
+
+        if (splitrent[i].count == 0) {
+            printf("| %-92s |\n", "No rented books");
+        }
+
+        printf("==============================================================================================\n");
+
+        // History table
+        printf("| %-92s |\n", "History");
+        printf("==============================================================================================\n");
+        printf("| %-5s | %-15s | %-67s |\n", "No.", "BookID", "Book Title");
+        printf("----------------------------------------------------------------------------------------------\n");
+
         for (j = 0; j < splithistory[i].count; j++) {
-            printf("History[%d] = %s = %s\n", j, splithistory[i].arr[j], search_bookname_by_id(library, splithistory[i].arr[j]));
+            printf("| %-5d | %-15s | %-67s |\n",
+                   j,
+                   splithistory[i].arr[j],
+                   search_bookname_by_id(library, splithistory[i].arr[j]));
         }
-        printf("\n");
+
+        if (splithistory[i].count == 0) {
+            printf("| %-92s |\n", "No history records");
+        }
+
+        printf("==============================================================================================\n\n");
     }
 }
+
 
 void show_HistoryRent(customer Customers[50], int *i){
     if(strlen(Customers[*i].rentBook) == 0){
@@ -439,11 +506,18 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
     struct tm *local;
     char Temp_Date[20];
     char Temp_Return[20];
-    int i, j;
+    int i, j, ii;
     int returnDays;
+    int realprice;
     int fine;
+    int found[5];
+    char ANavailable[20] = "";
 
+
+    for (int x = 0; x < 5; x++)
+    found[x] = -1;
     // ถ้ายังไม่ได้ยืม → เข้าหน้ายืม
+    ii = 0;
     if (strlen(Customers[*locate_user_index].rentBook) == 0) {
         printf("------------------ Rent Menu ------------------\n");
         printf("You are in borrow menu\n");
@@ -451,12 +525,18 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
         printf("%-10s %-40s %-10s %-10s\n", "ID", "Title", "Price", "Stock");
         printf("--------------------------------------------------------------------------\n");
 
-        for (i = 0; i < range_library; i++) {
-            printf("%-10s %-40s %-10.2f %-10d\n",
-                library[i].ID,
-                library[i].title,
-                library[i].rentPrice,
-                library[i].rentStock);
+        if(library[ii].stock>=library[ii].rentStock){
+            strcpy(ANavailable,"Available");
+        }else{
+            strcpy(ANavailable,"Not_Available");
+        }
+
+        for (ii = 0; ii < range_library; ii++) {
+            printf("%-10s %-40s %-10.2f %-20s\n",
+                library[ii].ID,
+                library[ii].title,
+                library[ii].rentPrice,
+                ANavailable);
         }
 
         printf("--------------------------------------------------------------------------\n");
@@ -470,11 +550,39 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
         }
 
         i = 0;
-        while (i < Amount) {
+        printf("How many days you want to borrow?(3-9 [3 is minimum]): ");
+        scanf("%d", &returnDays);
+        if (returnDays < 3 || returnDays > 9){
+            printf("Fail.\n");
+            return;
+        }
+        while (i < Amount) {    
+            ii = 0;
+            printf("------------------ Rent Menu ------------------\n");
+            printf("You are in borrow menu\n");
+            printf("------------------ Book List ------------------\n");
+            printf("%-10s %-40s %-10s %-10s\n", "ID", "Title", "Price", "Stock");
+            printf("--------------------------------------------------------------------------\n");
+
+            if(library[ii].stock>=library[ii].rentStock){
+                strcpy(ANavailable,"Available");
+            }else{
+                strcpy(ANavailable,"Not_Available");
+            }
+
+            for (ii = 0; ii < range_library; ii++) {
+                printf("%-10s %-40s %-10.2f %-20s\n",
+                    library[ii].ID,
+                    library[ii].title,
+                    library[ii].rentPrice,
+                    ANavailable);
+            }
+
+            printf("--------------------------------------------------------------------------\n");        
+            
             printf("Please input your %d book ID: ", i + 1);
             scanf("%s", Temp_Book_ID);
 
-            int found[5] = -1;
             for (int j = 0; j < range_library; j++) {
                 if (strcmp(library[j].ID, Temp_Book_ID) == 0) {
                     found[i] = j;
@@ -499,14 +607,8 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
                 printf("Please enter book ID again.\n");
                 continue;
             } else if (sure == 'y' || sure == 'Y') {
-                printf("How many days you want to borrow?: ");
-                scanf("%d", &returnDays);
-                if (returnDays < '0' || returnDays > '9'){
-                    printf("Please enter book ID again.\n");
-                    continue;
-                }
-                
-                if (Customers[*locate_user_index].money < library[found[i]].rentPrice) {
+                realprice = library[found[i]].rentPrice + (returnDays-3)*(library[found[i]].price)*5/100;
+                if (Customers[*locate_user_index].money < realprice) {
                     printf("Not enough balance! Please top up first.\n");
                     break;
                 }
@@ -536,10 +638,10 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
                 continue;
             }
         }
-        for(int k=0;k<=i;k++){
-            save_income(library[found[k]].rentPrice);
+        for (int k = 0; k < i; k++) {
+            save_income(library[found[k]].rentPrice + (returnDays-3)*(library[found[k]].price)*5/100);
             library[found[k]].rentStock += 1;
-            Customers[*locate_user_index].money -= library[found[k]].rentPrice;
+            Customers[*locate_user_index].money -= (library[found[k]].rentPrice + (returnDays-3)*(library[found[k]].price)*5/100);
         }
     }
     // ถ้ามีหนังสือที่ยืมอยู่ → เข้าหน้าคืน
@@ -571,7 +673,7 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
                 for (j = 0; j < range_library; j++) {
                     // ✅ ต้องใช้ == 0
                     if (strcmp(library[j].ID, splitrent[*locate_user_index].arr[i]) == 0) {
-                        fine = (int)(library[j].rentPrice * 0.5 * daysLate);
+                        fine = (int)(library[j].rentPrice * 0.75 * daysLate);
                         printf("You returned '%s' %d day(s) late. Fine: %d\n",
                                library[j].title, daysLate, fine);
 
