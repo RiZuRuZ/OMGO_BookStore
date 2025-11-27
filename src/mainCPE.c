@@ -124,17 +124,17 @@ int userSignUp(customer Customers[], int range_customers) {
     return range_customers;
 }
 
-int userLogin(customer Customers[50], int k, int *locate_user_index){//Jay
+int userLogin(customer Customers[50], int k, int *locate_user_index){//่ฟังก์ชั่นการ login user
     char userID[30],userPass[30];
     printf("------------------------------------------------\n");
-    for(int i=0; i<3; i++){
+    for(int i=0; i<3; i++){//่กรอกรหัสผ่านได้แค่ 3 ครั้ง
         printf("Enter your ID: ");
         scanf("%s",userID);
         printf("Enter your password: ");
         scanf("%s",userPass);
         printf("------------------------------------------------\n");
         for(int j=0; j<k; j++){
-            if (strcmp(userID, Customers[j].ID) == 0 && strcmp(userPass, Customers[j].pass) == 0) {
+            if (strcmp(userID, Customers[j].ID) == 0 && strcmp(userPass, Customers[j].pass) == 0) {//รหัสผ่านตรงกับ ID ของใคร
                 *locate_user_index = j;
                 return 1;
             } 
@@ -143,7 +143,7 @@ int userLogin(customer Customers[50], int k, int *locate_user_index){//Jay
     return 0;
 }
 
-int ownerLogin(){ //Jay
+int ownerLogin(){ //ฟังก์ชั่นการ login owner
     char ownerName[30],ownerPass[30];
     printf("------------------------------------------------\n");
     for(int i=0; i<3; i++){
@@ -152,15 +152,15 @@ int ownerLogin(){ //Jay
         printf("Enter your password: ");
         scanf("%s",ownerPass);
         printf("------------------------------------------------\n");
-        if (strcmp(ownerName, "OMGO") == 0 && strcmp(ownerPass, "BookStore") == 0) {
+        if (strcmp(ownerName, "OMGO") == 0 && strcmp(ownerPass, "BookStore") == 0) {//เช็ครหัสผ่านของ owner
             return 1;
         } 
     }
     return 0;
 }
 
-//====================================================================================//
-int splitString(char *str, char arr[10][50]) {
+//====================================================================================
+int splitString(char *str, char arr[10][50]) {//แยก string ด้วย &
     int count = 0;
     char *token = strtok(str, "&");
     while (token != NULL && count < 10) {
@@ -180,7 +180,7 @@ char* search_bookname_by_id(libraryowner library[50], char book_id[10]) {
     return NULL; // ไม่พบหนังสือ
 }
 
-//ยังไม่ได้ลองอาจจะ bug
+
 char* search_user_by_id(customer Customers[50], char customer_id[10]) {
     for (int i = 0; i < 50; i++) {
         if (Customers[i].ID[0] == '\0') break; // ไม่มีข้อมูลแล้ว
@@ -191,7 +191,7 @@ char* search_user_by_id(customer Customers[50], char customer_id[10]) {
     return NULL; // ไม่พบuser
 }
 
-void show_book(libraryowner library[50], int k) {
+void show_book(libraryowner library[50], int k) {//แสดงหนังสือทั้งหมด
 
     printf("---------------------------------------------------------------------------------------------------------------------------\n");
     printf("| %-6s | %-50s | %-25s | %-20s | %-20s | %-10s | %-8s | %-12s | %-10s |\n",
@@ -216,7 +216,7 @@ void show_book(libraryowner library[50], int k) {
 }
 
 
-void show_customers(customer Customers[50], int k, split splitrent[50], split splithistory[50], libraryowner library[50]) {
+void show_customers(customer Customers[50], int k, split splitrent[50], split splithistory[50], libraryowner library[50]) {//แสดงข้อมูลลูกค้าทั้งหมด
     int i, j;
 
     for (i = 0; i < k; i++) {
@@ -286,7 +286,7 @@ void show_customers(customer Customers[50], int k, split splitrent[50], split sp
 }
 
 
-void show_HistoryRent(customer Customers[50], int *i){
+void show_HistoryRent(customer Customers[50], int *i){//แสดงประวัติการยืมของลูกค้าที่ login
     if(strlen(Customers[*i].rentBook) == 0){
         printf("There is no information in the system.\n");
     } else {
@@ -298,7 +298,7 @@ void show_HistoryRent(customer Customers[50], int *i){
     
 }
 
-void show_AllHistoryRent(customer Customers[50], int k) {
+void show_AllHistoryRent(customer Customers[50], int k) {//แสดงข้อมูลการยืมของลูกค้าทุกคน
     printf("------------------------------------------------------------------------------------------------------------\n");
     printf("| %-6s | %-15s | %-20s | %-12s | %-12s | %-30s |\n",
            "ID", "Name", "Current Rent", "Rent Date", "Return Date", "History");
@@ -511,7 +511,7 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
     int realprice;
     int fine;
     int found[5];
-    char ANavailable[20] = "";
+    char ANavailable[50][20];
 
 
     for (int x = 0; x < 5; x++)
@@ -521,24 +521,25 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
     if (strlen(Customers[*locate_user_index].rentBook) == 0) {
         printf("------------------ Rent Menu ------------------\n");
         printf("You are in borrow menu\n");
+        // ก่อนลูปแสดงหนังสือ
+        for (ii = 0; ii < range_library; ii++) {
+            if (library[ii].stock > library[ii].rentStock)
+                strcpy(ANavailable[ii], "Available");
+            else
+                strcpy(ANavailable[ii], "Not_Available");
+        }
+
+        // แสดงหนังสือ
         printf("------------------ Book List ------------------\n");
         printf("%-10s %-40s %-10s %-10s\n", "ID", "Title", "Price", "Stock");
         printf("--------------------------------------------------------------------------\n");
-
-        if(library[ii].stock>=library[ii].rentStock){
-            strcpy(ANavailable,"Available");
-        }else{
-            strcpy(ANavailable,"Not_Available");
-        }
-
         for (ii = 0; ii < range_library; ii++) {
             printf("%-10s %-40s %-10.2f %-20s\n",
                 library[ii].ID,
                 library[ii].title,
                 library[ii].rentPrice,
-                ANavailable);
+                ANavailable[ii]);
         }
-
         printf("--------------------------------------------------------------------------\n");
 
         printf("How many books do you want to borrow? (1-5): ");
@@ -556,29 +557,27 @@ void Rent_Book(libraryowner library[], customer Customers[], int range_library, 
             printf("Fail.\n");
             return;
         }
-        while (i < Amount) {    
-            ii = 0;
-            printf("------------------ Rent Menu ------------------\n");
-            printf("You are in borrow menu\n");
+        while (i < Amount) {  
+            // ก่อนลูปแสดงหนังสือ
+            for (ii = 0; ii < range_library; ii++) {
+                if (library[ii].stock > library[ii].rentStock)
+                    strcpy(ANavailable[ii], "Available");
+                else
+                    strcpy(ANavailable[ii], "Not_Available");
+            }
+
+            // แสดงหนังสือ
             printf("------------------ Book List ------------------\n");
             printf("%-10s %-40s %-10s %-10s\n", "ID", "Title", "Price", "Stock");
             printf("--------------------------------------------------------------------------\n");
-
-            if(library[ii].stock>=library[ii].rentStock){
-                strcpy(ANavailable,"Available");
-            }else{
-                strcpy(ANavailable,"Not_Available");
-            }
-
             for (ii = 0; ii < range_library; ii++) {
                 printf("%-10s %-40s %-10.2f %-20s\n",
                     library[ii].ID,
                     library[ii].title,
                     library[ii].rentPrice,
-                    ANavailable);
+                    ANavailable[ii]);
             }
-
-            printf("--------------------------------------------------------------------------\n");        
+            printf("--------------------------------------------------------------------------\n");     
             
             printf("Please input your %d book ID: ", i + 1);
             scanf("%s", Temp_Book_ID);
@@ -757,7 +756,7 @@ int add_book(libraryowner library[], int range_library) {
 
     return range_library;
 }
-
+//นำหนังสือออกจากระบบด้วยไอดี
 int remove_book(libraryowner library[], int range_library) {
     char targetID[10];
     printf("Enter book ID to remove: ");
@@ -785,6 +784,7 @@ int remove_book(libraryowner library[], int range_library) {
     return range_library;
 }
 
+//แก้ไขนำหนังสือด้วยไอดี
 void edit_book(libraryowner library[], int range_library) {
     char editID[10];
     printf("Enter book ID to edit: ");
@@ -1031,7 +1031,7 @@ int main() {
     ///////////////////////main///////////////////////
     
 
-    //login Jay
+    //login 
     int login_state; // 0 not pass, 1 pass
     int user_index;
     int *locate_user_index = &user_index;
